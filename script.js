@@ -158,6 +158,9 @@ function renderCalendarGrid(startDate, allEvents) {
         grid.appendChild(dayCell);
         loopDate.setDate(loopDate.getDate() + 1);
     }
+
+    // Add this at the bottom of renderCalendarGrid
+document.getElementById('task-lists-container').insertAdjacentHTML('beforeend', `<p style="font-size:0.7rem; color:#ccc; text-align:center;">Last sync: ${new Date().toLocaleTimeString()}</p>`);
 }
 
 /* ==========================================
