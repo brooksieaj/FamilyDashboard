@@ -17,7 +17,6 @@ const FAMILY_CALENDARS = [
 let tokenClient;
 let accessToken = null;
 let currentEditEvent = null; 
-let countdownInterval = null; // Stores the ticking clock
 
 /* ==========================================
    2. GOOGLE API LOADING
@@ -61,7 +60,7 @@ function handleAuthClick() {
 
 /* ==========================================
    3. CALENDAR RENDERING LOGIC
-   ========================================== */
+   ========================================= */
 async function fetchCalendarEvents() {
     const now = new Date();
     const day = now.getDay(); 
@@ -172,11 +171,6 @@ function openEventModal(event = null) {
         `<option value="${p.id}">${p.name}</option>`
     ).join('');
 
-    // Pre-fill Countdown fields from localStorage
-    document.getElementById('countdownEventName').value = localStorage.getItem('countdownName') || '';
-    document.getElementById('countdownTargetDate').value = localStorage.getItem('countdownDate') || '';
-    document.getElementById('countdownTargetTime').value = localStorage.getItem('countdownTime') || '';
-
     if (event) {
         currentEditEvent = event;
         title.innerText = "Edit Event";
@@ -208,41 +202,30 @@ async function submitEvent() {
     const date = document.getElementById('eventDate').value;
     const time = document.getElementById('eventTime').value;
 
-    // 1. Handle Countdown Logic
-    const cName = document.getElementById('countdownEventName').value;
-    const cDate = document.getElementById('countdownTargetDate').value;
-    const cTime = document.getElementById('countdownTargetTime').value;
-
-    if (cName && cDate) {
-        localStorage.setItem('countdownName', cName);
-        localStorage.setItem('countdownDate', cDate);
-        localStorage.setItem('countdownTime', cTime);
-        initCountdown(); // Refresh the timer display
+    if (!summary || !date) {
+        alert("Please enter a name and date.");
+        return;
     }
 
-    // 2. Handle Calendar Logic
-    if (summary && date) {
-        let startObj = time ? { 'dateTime': `${date}T${time}:00+08:00` } : { 'date': date };
-        let endObj = time ? { 'dateTime': `${date}T${addOneHour(time)}:00+08:00` } : { 'date': date };
+    let startObj = time ? { 'dateTime': `${date}T${time}:00+08:00` } : { 'date': date };
+    let endObj = time ? { 'dateTime': `${date}T${addOneHour(time)}:00+08:00` } : { 'date': date };
 
-        try {
-            const resource = { 'summary': summary, 'start': startObj, 'end': endObj };
-            if (currentEditEvent) {
-                await gapi.client.calendar.events.update({
-                    'calendarId': currentEditEvent.calendarId,
-                    'eventId': currentEditEvent.id,
-                    'resource': resource
-                });
-            } else {
-                await gapi.client.calendar.events.insert({ 'calendarId': calendarId, 'resource': resource });
-            }
-        } catch (err) {
-            console.error("Calendar Save Error:", err);
+    try {
+        const resource = { 'summary': summary, 'start': startObj, 'end': endObj };
+        if (currentEditEvent) {
+            await gapi.client.calendar.events.update({
+                'calendarId': currentEditEvent.calendarId,
+                'eventId': currentEditEvent.id,
+                'resource': resource
+            });
+        } else {
+            await gapi.client.calendar.events.insert({ 'calendarId': calendarId, 'resource': resource });
         }
+        closeEventModal();
+        fetchCalendarEvents();
+    } catch (err) {
+        console.error("Calendar Save Error:", err);
     }
-
-    closeEventModal();
-    fetchCalendarEvents();
 }
 
 async function deleteEvent() {
@@ -265,43 +248,7 @@ function addOneHour(timeStr) {
 }
 
 /* ==========================================
-   5. COUNTDOWN ENGINE
-   ========================================== */
-function initCountdown() {
-    const name = localStorage.getItem('countdownName');
-    const date = localStorage.getItem('countdownDate');
-    const time = localStorage.getItem('countdownTime') || "00:00";
-
-    if (!name || !date) return;
-
-    document.getElementById('countdown-label').innerText = name.toUpperCase();
-    
-    if (countdownInterval) clearInterval(countdownInterval);
-
-    const target = new Date(`${date}T${time}:00+08:00`).getTime();
-
-    countdownInterval = setInterval(() => {
-        const now = new Date().getTime();
-        const distance = target - now;
-
-        if (distance < 0) {
-            clearInterval(countdownInterval);
-            document.getElementById('countdown-timer').innerText = "EVENT STARTED!";
-            return;
-        }
-
-        const d = Math.floor(distance / (1000 * 60 * 60 * 24));
-        const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-        const s = Math.floor((distance % (1000 * 60)) / 1000);
-
-        document.getElementById('countdown-timer').innerText = 
-            `${d}d ${h.toString().padStart(2,'0')}h ${m.toString().padStart(2,'0')}m ${s.toString().padStart(2,'0')}s`;
-    }, 1000);
-}
-
-/* ==========================================
-   6. TASKS LOGIC
+   5. TASKS LOGIC
    ========================================== */
 async function fetchTasks() {
     try {
@@ -338,5 +285,4 @@ async function fetchTasks() {
 window.onload = () => { 
     gapiLoaded(); 
     gisLoaded(); 
-    initCountdown(); // Start the timer when the page opens
 };
