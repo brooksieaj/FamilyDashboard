@@ -98,7 +98,6 @@ h1 {
     flex-grow: 1;
 }
 
-/* MODIFIED: Day Cell for Top Row Weather */
 .day-cell {
     background: white;
     padding: 6px;
@@ -110,7 +109,7 @@ h1 {
     transition: all 0.3s ease;
 }
 
-/* NEW: Top Row Layout (Date Left, Weather Right) */
+/* New: Layout for Date and Weather */
 .day-top-row {
     display: flex;
     justify-content: space-between;
@@ -122,20 +121,17 @@ h1 {
     font-weight: bold;
     color: #888;
     font-size: 0.8rem;
-    align-self: flex-start; /* Date on left */
 }
 
-/* NEW: Weather Info in Cell */
 .cell-weather {
     display: flex;
     align-items: center;
-    gap: 4px;
-    text-align: right;
+    gap: 2px;
 }
 
 .cell-weather img {
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
 }
 
 .cell-temp {
@@ -143,14 +139,16 @@ h1 {
     color: #444;
     font-weight: bold;
     line-height: 1.1;
+    text-align: right;
 }
 
 .cell-temp span {
-    color: #999;
+    color: #aaa;
     font-weight: normal;
+    display: block;
 }
 
-/* Past Day Styling */
+/* Day States */
 .past-day {
     background-color: #f2f2f2 !important;
     opacity: 0.5;
@@ -172,27 +170,19 @@ h1 {
     padding: 4px 6px;
     border-radius: 4px;
     line-height: 1.2;
-    white-space: normal; 
-    word-wrap: break-word;
-    box-shadow: 1px 1px 2px rgba(0,0,0,0.15);
-    border-left: 3px solid rgba(0,0,0,0.2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-shadow: 1px 1px 2px rgba(0,0,0,0.1);
     cursor: pointer;
 }
 
-/* 5. Sidebar, Buttons, and Modals (Remaining Same) */
+/* 5. Sidebar & Tasks */
 .task-sidebar { background: #fff; border-left: 2px solid #e0e0e0; padding: 20px; overflow-y: auto; }
-.task-group h3 { font-size: 1.1rem; color: #444; padding-bottom: 5px; border-bottom: 2px solid #f0f2f5; margin-top: 20px; }
-button { padding: 10px 20px; background-color: #4285f4; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: background 0.2s; font-family: inherit; }
-button:hover { background-color: #357ae8; }
-.modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); }
-.modal-content { background-color: white; margin: 8% auto; padding: 30px; border-radius: 15px; width: 450px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid #ccc; }
-.modal-content h2 { margin-top: 0; color: #333; font-size: 1.5rem; border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; }
-.modal-content label { font-weight: bold; font-size: 0.9rem; color: #666; margin-top: 5px; }
-.modal-content input, .modal-content select { padding: 12px; border: 2px solid #eee; border-radius: 8px; font-size: 1rem; font-family: inherit; outline: none; transition: border-color 0.2s; }
-.modal-content input:focus { border-color: #4285f4; }
-.time-input { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-.time-input div { display: flex; flex-direction: column; gap: 5px; }
-.modal-buttons { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; }
-.modal-buttons button { padding: 12px 24px; font-size: 1rem; }
-#deleteEventBtn { background-color: #db4437; margin-right: auto; }
-#deleteEventBtn:hover { background-color: #c53929; }
+.task-group h3 { font-size: 1.1rem; color: #444; border-bottom: 2px solid #f0f2f5; margin-top: 20px; padding-bottom: 5px; }
+
+/* 6. Modal Styling */
+.modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
+.modal-content { background: white; margin: 8% auto; padding: 30px; border-radius: 15px; width: 450px; display: flex; flex-direction: column; gap: 12px; }
+.modal-content input, .modal-content select { padding: 12px; border: 2px solid #eee; border-radius: 8px; font-size: 1rem; outline: none; }
+#eventCalendar { font-weight: bold; cursor: pointer; }
