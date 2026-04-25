@@ -33,6 +33,45 @@ body, html {
     align-items: center;
 }
 
+/* NEW: Countdown Widget Styling */
+#countdown-widget {
+    background: white;
+    padding: 5px 15px;
+    border-radius: 8px;
+    border: 2px solid #eee;
+    margin-right: 15px;
+    text-align: right;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+#countdown-widget:hover {
+    border-color: #fc6a03; /* Matches the Add Countdown button */
+    background-color: #fffaf7;
+    transform: translateY(-1px);
+}
+
+#widget-label {
+    font-size: 0.65rem;
+    font-weight: bold;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+#widget-timer {
+    font-size: 1rem;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+    color: #db4437;
+}
+
+/* NEW: Helper class to hide elements (like the calendar dropdown) */
+.hidden {
+    display: none !important;
+}
+
 h1 {
     margin: 0;
     color: #333;

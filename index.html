@@ -15,6 +15,13 @@
             <header class="controls">
                 <h1>Our Family Calendar</h1>
                 <div class="button-group">
+                    <div id="countdown-widget" onclick="openCountdownModal()" title="Click to edit countdown">
+                        <div id="widget-label">COUNTDOWN</div>
+                        <div id="widget-timer">00:00:00:00</div>
+                    </div>
+
+                    <button id="add-countdown-btn" onclick="openCountdownModal()" style="background-color: #fc6a03; margin-right: 10px;">+ Add Countdown</button>
+
                     <button onclick="openEventModal()" style="background-color: #0f9d58; margin-right: 10px;">+ Add Event</button>
                     <button id="auth_button" onclick="handleAuthClick()">Connect Google Account</button>
                 </div>
@@ -49,9 +56,10 @@
             <label for="eventSummary">Event Name</label>
             <input type="text" id="eventSummary" placeholder="e.g. Soccer Practice" required>
             
-            <label for="eventCalendar">Who is this for?</label>
-            <select id="eventCalendar">
-                </select>
+            <div id="calendar-select-group">
+                <label for="eventCalendar">Who is this for?</label>
+                <select id="eventCalendar"></select>
+            </div>
 
             <div class="time-input">
                 <div>
@@ -59,7 +67,7 @@
                     <input type="date" id="eventDate">
                 </div>
                 <div>
-                    <label>Time (Optional)</label>
+                    <label id="timeLabel">Time (Optional)</label>
                     <input type="time" id="eventTime">
                 </div>
             </div>

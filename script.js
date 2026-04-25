@@ -17,6 +17,8 @@ const FAMILY_CALENDARS = [
 let tokenClient;
 let accessToken = null;
 let currentEditEvent = null; 
+let isCountdownMode = false; // Tracks if the modal is currently a countdown editor
+let countdownInterval = null; // Stores the ticking clock
 
 /* ==========================================
    2. GOOGLE API LOADING
@@ -161,11 +163,40 @@ function renderCalendarGrid(startDate, allEvents) {
 /* ==========================================
    4. EVENT MODAL LOGIC (ADD / EDIT / DELETE)
    ========================================== */
+
+// 4a. Trigger Countdown Mode
+function openCountdownModal() {
+    isCountdownMode = true;
+    const modal = document.getElementById('eventModal');
+    const deleteBtn = document.getElementById('deleteEventBtn');
+    const selectGroup = document.getElementById('calendar-select-group');
+    
+    document.getElementById('modalTitle').innerText = "Set Wall Countdown";
+    selectGroup.classList.add('hidden'); // Hide "Who is this for?"
+    
+    // Fill with existing localStorage data
+    document.getElementById('eventSummary').value = localStorage.getItem('wallCountdownName') || '';
+    document.getElementById('eventDate').value = localStorage.getItem('wallCountdownDate') || '';
+    document.getElementById('eventTime').value = localStorage.getItem('wallCountdownTime') || '';
+
+    // If a countdown already exists, allow deletion
+    deleteBtn.style.display = localStorage.getItem('wallCountdownName') ? "block" : "none";
+    deleteBtn.innerText = "Remove Countdown";
+
+    modal.style.display = "block";
+}
+
+// 4b. Standard Event Mode
 function openEventModal(event = null) {
+    isCountdownMode = false;
     const modal = document.getElementById('eventModal');
     const select = document.getElementById('eventCalendar');
+    const selectGroup = document.getElementById('calendar-select-group');
     const deleteBtn = document.getElementById('deleteEventBtn');
     const title = document.getElementById('modalTitle');
+    
+    selectGroup.classList.remove('hidden');
+    deleteBtn.innerText = "Delete";
     
     select.innerHTML = FAMILY_CALENDARS.map(p => 
         `<option value="${p.id}">${p.name}</option>`
@@ -198,7 +229,6 @@ function closeEventModal() {
 
 async function submitEvent() {
     const summary = document.getElementById('eventSummary').value;
-    const calendarId = document.getElementById('eventCalendar').value;
     const date = document.getElementById('eventDate').value;
     const time = document.getElementById('eventTime').value;
 
@@ -207,38 +237,57 @@ async function submitEvent() {
         return;
     }
 
-    let startObj = time ? { 'dateTime': `${date}T${time}:00+08:00` } : { 'date': date };
-    let endObj = time ? { 'dateTime': `${date}T${addOneHour(time)}:00+08:00` } : { 'date': date };
-
-    try {
-        const resource = { 'summary': summary, 'start': startObj, 'end': endObj };
-        if (currentEditEvent) {
-            await gapi.client.calendar.events.update({
-                'calendarId': currentEditEvent.calendarId,
-                'eventId': currentEditEvent.id,
-                'resource': resource
-            });
-        } else {
-            await gapi.client.calendar.events.insert({ 'calendarId': calendarId, 'resource': resource });
-        }
+    if (isCountdownMode) {
+        localStorage.setItem('wallCountdownName', summary);
+        localStorage.setItem('wallCountdownDate', date);
+        localStorage.setItem('wallCountdownTime', time);
+        initCountdown();
         closeEventModal();
-        fetchCalendarEvents();
-    } catch (err) {
-        console.error("Calendar Save Error:", err);
+    } else {
+        const calendarId = document.getElementById('eventCalendar').value;
+        let startObj = time ? { 'dateTime': `${date}T${time}:00+08:00` } : { 'date': date };
+        let endObj = time ? { 'dateTime': `${date}T${addOneHour(time)}:00+08:00` } : { 'date': date };
+
+        try {
+            const resource = { 'summary': summary, 'start': startObj, 'end': endObj };
+            if (currentEditEvent) {
+                await gapi.client.calendar.events.update({
+                    'calendarId': currentEditEvent.calendarId,
+                    'eventId': currentEditEvent.id,
+                    'resource': resource
+                });
+            } else {
+                await gapi.client.calendar.events.insert({ 'calendarId': calendarId, 'resource': resource });
+            }
+            closeEventModal();
+            fetchCalendarEvents();
+        } catch (err) {
+            console.error("Calendar Save Error:", err);
+        }
     }
 }
 
 async function deleteEvent() {
-    if (!currentEditEvent || !confirm("Delete this event?")) return;
-    try {
-        await gapi.client.calendar.events.delete({
-            'calendarId': currentEditEvent.calendarId,
-            'eventId': currentEditEvent.id
-        });
-        closeEventModal();
-        fetchCalendarEvents();
-    } catch (err) {
-        console.error("Delete Error:", err);
+    if (isCountdownMode) {
+        if (confirm("Remove the countdown timer?")) {
+            localStorage.removeItem('wallCountdownName');
+            localStorage.removeItem('wallCountdownDate');
+            localStorage.removeItem('wallCountdownTime');
+            initCountdown();
+            closeEventModal();
+        }
+    } else {
+        if (!currentEditEvent || !confirm("Delete this event?")) return;
+        try {
+            await gapi.client.calendar.events.delete({
+                'calendarId': currentEditEvent.calendarId,
+                'eventId': currentEditEvent.id
+            });
+            closeEventModal();
+            fetchCalendarEvents();
+        } catch (err) {
+            console.error("Delete Error:", err);
+        }
     }
 }
 
@@ -248,7 +297,54 @@ function addOneHour(timeStr) {
 }
 
 /* ==========================================
-   5. TASKS LOGIC
+   5. COUNTDOWN ENGINE
+   ========================================== */
+function initCountdown() {
+    const name = localStorage.getItem('wallCountdownName');
+    const date = localStorage.getItem('wallCountdownDate');
+    const time = localStorage.getItem('wallCountdownTime') || "00:00";
+
+    const widget = document.getElementById('countdown-widget');
+    const addBtn = document.getElementById('add-countdown-btn');
+
+    if (!name || !date) {
+        widget.classList.add('hidden');
+        addBtn.classList.remove('hidden');
+        if (countdownInterval) clearInterval(countdownInterval);
+        return;
+    }
+
+    // Show widget, hide orange add button
+    widget.classList.remove('hidden');
+    addBtn.classList.add('hidden');
+    document.getElementById('widget-label').innerText = name;
+    
+    if (countdownInterval) clearInterval(countdownInterval);
+
+    const target = new Date(`${date}T${time}:00+08:00`).getTime();
+
+    countdownInterval = setInterval(() => {
+        const now = new Date().getTime();
+        const distance = target - now;
+
+        if (distance < 0) {
+            clearInterval(countdownInterval);
+            document.getElementById('widget-timer').innerText = "LIVE!";
+            return;
+        }
+
+        const d = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const s = Math.floor((distance % (1000 * 60)) / 1000);
+
+        document.getElementById('widget-timer').innerText = 
+            `${d}d ${h.toString().padStart(2,'0')}h ${m.toString().padStart(2,'0')}m ${s.toString().padStart(2,'0')}s`;
+    }, 1000);
+}
+
+/* ==========================================
+   6. TASKS LOGIC
    ========================================== */
 async function fetchTasks() {
     try {
@@ -285,4 +381,5 @@ async function fetchTasks() {
 window.onload = () => { 
     gapiLoaded(); 
     gisLoaded(); 
+    initCountdown(); // Start the timer on load
 };
