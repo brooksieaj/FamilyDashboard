@@ -33,7 +33,7 @@ body, html {
     align-items: center;
 }
 
-/* NEW: Countdown Widget Styling */
+/* Countdown Widget */
 #countdown-widget {
     background: white;
     padding: 5px 15px;
@@ -47,7 +47,7 @@ body, html {
 }
 
 #countdown-widget:hover {
-    border-color: #fc6a03; /* Matches the Add Countdown button */
+    border-color: #fc6a03;
     background-color: #fffaf7;
     transform: translateY(-1px);
 }
@@ -57,7 +57,6 @@ body, html {
     font-weight: bold;
     color: #888;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
 }
 
 #widget-timer {
@@ -67,7 +66,6 @@ body, html {
     color: #db4437;
 }
 
-/* NEW: Helper class to hide elements (like the calendar dropdown) */
 .hidden {
     display: none !important;
 }
@@ -93,7 +91,6 @@ h1 {
 .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    grid-template-rows: auto; 
     gap: 4px;
     background-color: #ddd; 
     border: 2px solid #333;
@@ -101,6 +98,7 @@ h1 {
     flex-grow: 1;
 }
 
+/* MODIFIED: Day Cell for Top Row Weather */
 .day-cell {
     background: white;
     padding: 6px;
@@ -108,8 +106,48 @@ h1 {
     flex-direction: column;
     gap: 4px;
     overflow: hidden; 
-    min-height: 90px; 
+    min-height: 100px; 
     transition: all 0.3s ease;
+}
+
+/* NEW: Top Row Layout (Date Left, Weather Right) */
+.day-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2px;
+}
+
+.day-num {
+    font-weight: bold;
+    color: #888;
+    font-size: 0.8rem;
+    align-self: flex-start; /* Date on left */
+}
+
+/* NEW: Weather Info in Cell */
+.cell-weather {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    text-align: right;
+}
+
+.cell-weather img {
+    width: 24px;
+    height: 24px;
+}
+
+.cell-temp {
+    font-size: 0.7rem;
+    color: #444;
+    font-weight: bold;
+    line-height: 1.1;
+}
+
+.cell-temp span {
+    color: #999;
+    font-weight: normal;
 }
 
 /* Past Day Styling */
@@ -119,11 +157,6 @@ h1 {
     filter: grayscale(60%);
 }
 
-.past-day .day-num {
-    color: #bbb;
-}
-
-/* Today Highlight */
 .today-day {
     background-color: #fffdec !important;
     border: 2px solid #4285f4 !important;
@@ -131,18 +164,10 @@ h1 {
     z-index: 1;
 }
 
-.day-num {
-    align-self: flex-end;
-    font-weight: bold;
-    color: #888;
-    font-size: 0.85rem;
-    margin-bottom: 2px;
-}
-
 /* 4. Event Styling */
 .event {
     color: white;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 600;
     padding: 4px 6px;
     border-radius: 4px;
@@ -154,125 +179,20 @@ h1 {
     cursor: pointer;
 }
 
-.event:hover {
-    filter: brightness(90%);
-}
-
-/* 5. Sidebar & Tasks */
-.task-sidebar {
-    background: #fff;
-    border-left: 2px solid #e0e0e0;
-    padding: 20px;
-    overflow-y: auto;
-}
-
-.task-group h3 {
-    font-size: 1.1rem;
-    color: #444;
-    padding-bottom: 5px;
-    border-bottom: 2px solid #f0f2f5;
-    margin-top: 20px;
-}
-
-/* 6. Button Styling */
-button {
-    padding: 10px 20px;
-    background-color: #4285f4;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background 0.2s;
-    font-family: inherit;
-}
-
-button:hover {
-    background-color: #357ae8;
-}
-
-/* 7. Modal (Add/Edit Event Dialog) */
-.modal {
-    display: none; 
-    position: fixed;
-    z-index: 2000;
-    left: 0; top: 0;
-    width: 100%; height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
-}
-
-.modal-content {
-    background-color: white;
-    margin: 8% auto;
-    padding: 30px;
-    border-radius: 15px;
-    width: 450px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    border: 1px solid #ccc;
-}
-
-.modal-content h2 {
-    margin-top: 0;
-    color: #333;
-    font-size: 1.5rem;
-    border-bottom: 2px solid #f0f2f5;
-    padding-bottom: 10px;
-}
-
-.modal-content label {
-    font-weight: bold;
-    font-size: 0.9rem;
-    color: #666;
-    margin-top: 5px;
-}
-
-.modal-content input, .modal-content select {
-    padding: 12px;
-    border: 2px solid #eee;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-family: inherit;
-    outline: none;
-    transition: border-color 0.2s;
-}
-
-.modal-content input:focus {
-    border-color: #4285f4;
-}
-
-.time-input {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-}
-
-.time-input div {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.modal-buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-top: 20px;
-}
-
-.modal-buttons button {
-    padding: 12px 24px;
-    font-size: 1rem;
-}
-
-#deleteEventBtn {
-    background-color: #db4437;
-    margin-right: auto;
-}
-
-#deleteEventBtn:hover {
-    background-color: #c53929;
-}
+/* 5. Sidebar, Buttons, and Modals (Remaining Same) */
+.task-sidebar { background: #fff; border-left: 2px solid #e0e0e0; padding: 20px; overflow-y: auto; }
+.task-group h3 { font-size: 1.1rem; color: #444; padding-bottom: 5px; border-bottom: 2px solid #f0f2f5; margin-top: 20px; }
+button { padding: 10px 20px; background-color: #4285f4; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: background 0.2s; font-family: inherit; }
+button:hover { background-color: #357ae8; }
+.modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); }
+.modal-content { background-color: white; margin: 8% auto; padding: 30px; border-radius: 15px; width: 450px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid #ccc; }
+.modal-content h2 { margin-top: 0; color: #333; font-size: 1.5rem; border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; }
+.modal-content label { font-weight: bold; font-size: 0.9rem; color: #666; margin-top: 5px; }
+.modal-content input, .modal-content select { padding: 12px; border: 2px solid #eee; border-radius: 8px; font-size: 1rem; font-family: inherit; outline: none; transition: border-color 0.2s; }
+.modal-content input:focus { border-color: #4285f4; }
+.time-input { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+.time-input div { display: flex; flex-direction: column; gap: 5px; }
+.modal-buttons { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; }
+.modal-buttons button { padding: 12px 24px; font-size: 1rem; }
+#deleteEventBtn { background-color: #db4437; margin-right: auto; }
+#deleteEventBtn:hover { background-color: #c53929; }

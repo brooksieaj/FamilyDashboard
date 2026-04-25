@@ -13,7 +13,8 @@
     <div class="dashboard-container">
         <main class="calendar-section">
             <header class="controls">
-                <h1>Our Family Calendar</h1>
+                <h1>Brooks Family Calendar</h1>
+                
                 <div class="button-group">
                     <div id="countdown-widget" onclick="openCountdownModal()" title="Click to edit countdown">
                         <div id="widget-label">COUNTDOWN</div>
@@ -21,7 +22,6 @@
                     </div>
 
                     <button id="add-countdown-btn" onclick="openCountdownModal()" style="background-color: #fc6a03; margin-right: 10px;">+ Add Countdown</button>
-
                     <button onclick="openEventModal()" style="background-color: #0f9d58; margin-right: 10px;">+ Add Event</button>
                     <button id="auth_button" onclick="handleAuthClick()">Connect Google Account</button>
                 </div>
@@ -37,8 +37,7 @@
                 <div>Sun</div>
             </div>
             
-            <div id="calendar-grid" class="calendar-grid">
-                </div>
+            <div id="calendar-grid" class="calendar-grid"></div>
         </main>
 
         <aside class="task-sidebar">
@@ -74,7 +73,6 @@
 
             <div class="modal-buttons">
                 <button id="deleteEventBtn" onclick="deleteEvent()" style="background-color: #db4437; margin-right: auto; display: none;">Delete</button>
-                
                 <button onclick="closeEventModal()" style="background-color: #888;">Cancel</button>
                 <button id="submitEventBtn" onclick="submitEvent()" style="background-color: #4285f4;">Save Changes</button>
             </div>

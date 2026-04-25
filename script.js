@@ -17,8 +17,9 @@ const FAMILY_CALENDARS = [
 let tokenClient;
 let accessToken = null;
 let currentEditEvent = null; 
-let isCountdownMode = false; // Tracks if the modal is currently a countdown editor
-let countdownInterval = null; // Stores the ticking clock
+let isCountdownMode = false; 
+let countdownInterval = null; 
+let weatherForecast = null; // Stores the daily forecast data
 
 /* ==========================================
    2. GOOGLE API LOADING
@@ -41,11 +42,13 @@ function gisLoaded() {
             accessToken = tokenResponse.access_token;
             document.getElementById('auth_button').innerText = "Refresh Board";
             
-            fetchCalendarEvents();
+            // Initial Load
+            fetchWeatherData(); // Weather triggers calendar fetch once data is in
             fetchTasks(); 
 
+            // Auto-refresh every 5 mins
             setInterval(() => {
-                fetchCalendarEvents();
+                fetchWeatherData();
                 fetchTasks();
             }, 1000 * 60 * 5);
         },
@@ -61,7 +64,37 @@ function handleAuthClick() {
 }
 
 /* ==========================================
-   3. CALENDAR RENDERING LOGIC
+   3. WEATHER FETCHING (Safety Bay)
+   ========================================== */
+async function fetchWeatherData() {
+    const lat = -32.30;
+    const lon = 115.71;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`;
+
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        weatherForecast = data.daily;
+        // Now that weather is here, fetch and render calendar
+        fetchCalendarEvents();
+    } catch (err) {
+        console.error("Weather Fetch Error:", err);
+        fetchCalendarEvents(); // Fallback: render calendar without weather
+    }
+}
+
+function getWeatherIcon(code) {
+    if (code === 0) return 'https://openweathermap.org/img/wn/01d@2x.png'; 
+    if (code >= 1 && code <= 3) return 'https://openweathermap.org/img/wn/02d@2x.png'; 
+    if (code >= 45 && code <= 48) return 'https://openweathermap.org/img/wn/50d@2x.png'; 
+    if (code >= 51 && code <= 67) return 'https://openweathermap.org/img/wn/10d@2x.png'; 
+    if (code >= 80 && code <= 82) return 'https://openweathermap.org/img/wn/09d@2x.png'; 
+    if (code >= 95) return 'https://openweathermap.org/img/wn/11d@2x.png'; 
+    return 'https://openweathermap.org/img/wn/03d@2x.png'; 
+}
+
+/* ==========================================
+   4. CALENDAR RENDERING LOGIC
    ========================================= */
 async function fetchCalendarEvents() {
     const now = new Date();
@@ -119,8 +152,31 @@ function renderCalendarGrid(startDate, allEvents) {
             dayCell.classList.add('today-day');
         }
 
+        // WEATHER LOGIC FOR CELL
+        let weatherHTML = '';
+        if (weatherForecast) {
+            const dateISO = loopDate.toISOString().split('T')[0];
+            const wIdx = weatherForecast.time.indexOf(dateISO);
+            if (wIdx !== -1) {
+                const max = Math.round(weatherForecast.temperature_2m_max[wIdx]);
+                const min = Math.round(weatherForecast.temperature_2m_min[wIdx]);
+                const code = weatherForecast.weather_code[wIdx];
+                weatherHTML = `
+                    <div class="cell-weather">
+                        <div class="cell-temp">${max}°<span>${min}°</span></div>
+                        <img src="${getWeatherIcon(code)}" alt="weather">
+                    </div>`;
+            }
+        }
+
+        // TOP ROW: Date (Left) and Weather (Right)
         const monthLabel = monthNames[loopDate.getMonth()];
-        dayCell.innerHTML = `<div class="day-num">${monthLabel} ${loopDate.getDate()}</div>`;
+        dayCell.innerHTML = `
+            <div class="day-top-row">
+                <div class="day-num">${monthLabel} ${loopDate.getDate()}</div>
+                ${weatherHTML}
+            </div>
+        `;
 
         const dayYear = loopDate.getFullYear();
         const dayMonth = loopDate.getMonth();
@@ -161,32 +217,23 @@ function renderCalendarGrid(startDate, allEvents) {
 }
 
 /* ==========================================
-   4. EVENT MODAL LOGIC (ADD / EDIT / DELETE)
+   5. MODALS, COUNTDOWN, TASKS (Remaining Same)
    ========================================== */
-
-// 4a. Trigger Countdown Mode
 function openCountdownModal() {
     isCountdownMode = true;
     const modal = document.getElementById('eventModal');
     const deleteBtn = document.getElementById('deleteEventBtn');
     const selectGroup = document.getElementById('calendar-select-group');
-    
     document.getElementById('modalTitle').innerText = "Set Wall Countdown";
-    selectGroup.classList.add('hidden'); // Hide "Who is this for?"
-    
-    // Fill with existing localStorage data
+    selectGroup.classList.add('hidden');
     document.getElementById('eventSummary').value = localStorage.getItem('wallCountdownName') || '';
     document.getElementById('eventDate').value = localStorage.getItem('wallCountdownDate') || '';
     document.getElementById('eventTime').value = localStorage.getItem('wallCountdownTime') || '';
-
-    // If a countdown already exists, allow deletion
     deleteBtn.style.display = localStorage.getItem('wallCountdownName') ? "block" : "none";
     deleteBtn.innerText = "Remove Countdown";
-
     modal.style.display = "block";
 }
 
-// 4b. Standard Event Mode
 function openEventModal(event = null) {
     isCountdownMode = false;
     const modal = document.getElementById('eventModal');
@@ -194,20 +241,14 @@ function openEventModal(event = null) {
     const selectGroup = document.getElementById('calendar-select-group');
     const deleteBtn = document.getElementById('deleteEventBtn');
     const title = document.getElementById('modalTitle');
-    
     selectGroup.classList.remove('hidden');
     deleteBtn.innerText = "Delete";
-    
-    select.innerHTML = FAMILY_CALENDARS.map(p => 
-        `<option value="${p.id}">${p.name}</option>`
-    ).join('');
-
+    select.innerHTML = FAMILY_CALENDARS.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
     if (event) {
         currentEditEvent = event;
         title.innerText = "Edit Event";
         document.getElementById('eventSummary').value = event.summary;
         select.value = event.calendarId;
-        
         const start = new Date(event.start.dateTime || event.start.date);
         document.getElementById('eventDate').value = start.toISOString().split('T')[0];
         document.getElementById('eventTime').value = event.start.dateTime ? start.toTimeString().slice(0, 5) : '';
@@ -223,20 +264,13 @@ function openEventModal(event = null) {
     modal.style.display = "block";
 }
 
-function closeEventModal() {
-    document.getElementById('eventModal').style.display = "none";
-}
+function closeEventModal() { document.getElementById('eventModal').style.display = "none"; }
 
 async function submitEvent() {
     const summary = document.getElementById('eventSummary').value;
     const date = document.getElementById('eventDate').value;
     const time = document.getElementById('eventTime').value;
-
-    if (!summary || !date) {
-        alert("Please enter a name and date.");
-        return;
-    }
-
+    if (!summary || !date) { alert("Please enter a name and date."); return; }
     if (isCountdownMode) {
         localStorage.setItem('wallCountdownName', summary);
         localStorage.setItem('wallCountdownDate', date);
@@ -247,23 +281,16 @@ async function submitEvent() {
         const calendarId = document.getElementById('eventCalendar').value;
         let startObj = time ? { 'dateTime': `${date}T${time}:00+08:00` } : { 'date': date };
         let endObj = time ? { 'dateTime': `${date}T${addOneHour(time)}:00+08:00` } : { 'date': date };
-
         try {
             const resource = { 'summary': summary, 'start': startObj, 'end': endObj };
             if (currentEditEvent) {
-                await gapi.client.calendar.events.update({
-                    'calendarId': currentEditEvent.calendarId,
-                    'eventId': currentEditEvent.id,
-                    'resource': resource
-                });
+                await gapi.client.calendar.events.update({ 'calendarId': currentEditEvent.calendarId, 'eventId': currentEditEvent.id, 'resource': resource });
             } else {
                 await gapi.client.calendar.events.insert({ 'calendarId': calendarId, 'resource': resource });
             }
             closeEventModal();
             fetchCalendarEvents();
-        } catch (err) {
-            console.error("Calendar Save Error:", err);
-        }
+        } catch (err) { console.error("Calendar Save Error:", err); }
     }
 }
 
@@ -279,15 +306,10 @@ async function deleteEvent() {
     } else {
         if (!currentEditEvent || !confirm("Delete this event?")) return;
         try {
-            await gapi.client.calendar.events.delete({
-                'calendarId': currentEditEvent.calendarId,
-                'eventId': currentEditEvent.id
-            });
+            await gapi.client.calendar.events.delete({ 'calendarId': currentEditEvent.calendarId, 'eventId': currentEditEvent.id });
             closeEventModal();
             fetchCalendarEvents();
-        } catch (err) {
-            console.error("Delete Error:", err);
-        }
+        } catch (err) { console.error("Delete Error:", err); }
     }
 }
 
@@ -296,70 +318,51 @@ function addOneHour(timeStr) {
     return `${String((h + 1) % 24).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
-/* ==========================================
-   5. COUNTDOWN ENGINE
-   ========================================== */
 function initCountdown() {
     const name = localStorage.getItem('wallCountdownName');
     const date = localStorage.getItem('wallCountdownDate');
     const time = localStorage.getItem('wallCountdownTime') || "00:00";
-
     const widget = document.getElementById('countdown-widget');
     const addBtn = document.getElementById('add-countdown-btn');
-
     if (!name || !date) {
         widget.classList.add('hidden');
         addBtn.classList.remove('hidden');
         if (countdownInterval) clearInterval(countdownInterval);
         return;
     }
-
-    // Show widget, hide orange add button
     widget.classList.remove('hidden');
     addBtn.classList.add('hidden');
     document.getElementById('widget-label').innerText = name;
-    
     if (countdownInterval) clearInterval(countdownInterval);
-
     const target = new Date(`${date}T${time}:00+08:00`).getTime();
-
     countdownInterval = setInterval(() => {
         const now = new Date().getTime();
         const distance = target - now;
-
         if (distance < 0) {
             clearInterval(countdownInterval);
             document.getElementById('widget-timer').innerText = "LIVE!";
             return;
         }
-
         const d = Math.floor(distance / (1000 * 60 * 60 * 24));
         const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
         const s = Math.floor((distance % (1000 * 60)) / 1000);
-
-        document.getElementById('widget-timer').innerText = 
-            `${d}d ${h.toString().padStart(2,'0')}h ${m.toString().padStart(2,'0')}m ${s.toString().padStart(2,'0')}s`;
+        document.getElementById('widget-timer').innerText = `${d}d ${h.toString().padStart(2,'0')}h ${m.toString().padStart(2,'0')}m ${s.toString().padStart(2,'0')}s`;
     }, 1000);
 }
 
-/* ==========================================
-   6. TASKS LOGIC
-   ========================================== */
 async function fetchTasks() {
     try {
         const tasklistResponse = await gapi.client.tasks.tasklists.list();
         const taskLists = tasklistResponse.result.items || [];
         const container = document.getElementById('task-lists-container');
         container.innerHTML = ''; 
-
         for (const list of taskLists) {
             const taskResponse = await gapi.client.tasks.tasks.list({ tasklist: list.id, showCompleted: false });
             const tasks = taskResponse.result.items || [];
             const listDiv = document.createElement('div');
             listDiv.className = 'task-group';
             listDiv.innerHTML = `<h3>${list.title}</h3>`;
-            
             tasks.forEach(task => {
                 const item = document.createElement('div');
                 item.style.padding = "4px 0";
@@ -368,18 +371,11 @@ async function fetchTasks() {
             });
             container.appendChild(listDiv);
         }
-        
-        const syncTime = document.createElement('p');
-        syncTime.style = "font-size:0.7rem; color:#ccc; text-align:center; margin-top: 20px;";
-        syncTime.innerText = `Last sync: ${new Date().toLocaleTimeString()}`;
-        container.appendChild(syncTime);
-    } catch (err) {
-        console.error("Tasks Fetch Error:", err);
-    }
+    } catch (err) { console.error("Tasks Fetch Error:", err); }
 }
 
 window.onload = () => { 
     gapiLoaded(); 
     gisLoaded(); 
-    initCountdown(); // Start the timer on load
+    initCountdown(); 
 };
