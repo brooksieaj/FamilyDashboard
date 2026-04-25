@@ -4,7 +4,6 @@
 const CLIENT_ID = '145116633029-6ujgciuv8f3c9901c8uaorr6qopsaa4v.apps.googleusercontent.com';
 const SCOPES = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/tasks';
 
-// Add your family members and their IDs from Google Calendar Settings
 const FAMILY_CALENDARS = [
     { name: 'Dad', id: 'primary', color: '#4285f4' }, 
     { name: 'Mum', id: '9qbap7bc4933q6ujmpmo0p88kg@group.calendar.google.com', color: '#0f9d58' }, 
@@ -39,9 +38,14 @@ function gisLoaded() {
             accessToken = tokenResponse.access_token;
             document.getElementById('auth_button').innerText = "Refresh Board";
             
-            // Trigger both Calendar and Tasks
             fetchCalendarEvents();
             fetchTasks(); 
+
+            // Auto-refresh every 30 minutes while the board is open
+            setInterval(() => {
+                fetchCalendarEvents();
+                fetchTasks();
+            }, 1000 * 60 * 30);
         },
     });
 }
@@ -55,13 +59,11 @@ function handleAuthClick() {
 }
 
 /* ==========================================
-   3. CALENDAR LOGIC (6-Week Monday Start)
+   3. CALENDAR LOGIC (Sorted & Cleaned)
    ========================================== */
 async function fetchCalendarEvents() {
     const now = new Date();
     const day = now.getDay(); 
-    
-    // Calculate Monday Start
     const diff = (day === 0 ? -6 : 1) - day;
     const startOfWeek = new Date(now);
     startOfWeek.setDate(now.getDate() + diff);
@@ -73,7 +75,6 @@ async function fetchCalendarEvents() {
     try {
         let allEvents = [];
 
-        // Fetch events for every person in the list
         for (const person of FAMILY_CALENDARS) {
             const response = await gapi.client.calendar.events.list({
                 'calendarId': person.id,
@@ -107,11 +108,9 @@ function renderCalendarGrid(startDate, allEvents) {
         const dayCell = document.createElement('div');
         dayCell.className = 'day-cell';
         
-        // Month and Date Label
         const monthLabel = monthNames[loopDate.getMonth()];
         dayCell.innerHTML = `<div class="day-num">${monthLabel} ${loopDate.getDate()}</div>`;
 
-        // Highlight Today
         const today = new Date();
         if (loopDate.toDateString() === today.toDateString()) {
             dayCell.style.border = "2px solid #4285f4";
@@ -119,25 +118,30 @@ function renderCalendarGrid(startDate, allEvents) {
         }
 
         const dateString = loopDate.toISOString().split('T')[0];
-        const dailyEvents = allEvents.filter(e => (e.start.dateTime || e.start.date).startsWith(dateString));
+        
+        // 1. FILTER for today
+        let dailyEvents = allEvents.filter(e => (e.start.dateTime || e.start.date).startsWith(dateString));
 
+        // 2. SORT: All-day events first (0), then by time
+        dailyEvents.sort((a, b) => {
+            const aTime = a.start.dateTime ? new Date(a.start.dateTime).getTime() : 0;
+            const bTime = b.start.dateTime ? new Date(b.start.dateTime).getTime() : 0;
+            return aTime - bTime;
+        });
+
+        // 3. RENDER
         dailyEvents.forEach(event => {
             const eventDiv = document.createElement('div');
             eventDiv.className = 'event';
             eventDiv.style.backgroundColor = event.personColor;
 
-            // 1. Extract and Format the Time
             let timeString = "";
             if (event.start.dateTime) {
                 const start = new Date(event.start.dateTime);
-                // Formats time to "9:00 AM" or "3:30 PM"
                 timeString = start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + " ";
             }
 
-            // 2. Set the text to "Time Summary" (e.g., "9:00 AM Soccer")
-            // If it's an "All Day" event, timeString will just be empty.
             eventDiv.innerText = timeString + event.summary;
-            
             dayCell.appendChild(eventDiv);
         });
 
@@ -147,7 +151,7 @@ function renderCalendarGrid(startDate, allEvents) {
 }
 
 /* ==========================================
-   4. TASKS LOGIC (Sidebar)
+   4. TASKS LOGIC
    ========================================== */
 async function fetchTasks() {
     try {
@@ -181,7 +185,6 @@ async function fetchTasks() {
     }
 }
 
-// Start the engines
 window.onload = () => { 
     gapiLoaded(); 
     gisLoaded(); 

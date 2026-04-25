@@ -5,12 +5,12 @@ body, html {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     height: 100vh;
     background-color: #f0f2f5;
-    overflow: hidden; /* Prevents double scrollbars */
+    overflow: hidden; 
 }
 
 .dashboard-container {
     display: grid;
-    grid-template-columns: 1fr 350px; /* Calendar takes most space, Sidebar is 350px */
+    grid-template-columns: 1fr 350px; 
     height: 100vh;
 }
 
@@ -32,6 +32,7 @@ body, html {
 h1 {
     margin: 0;
     color: #333;
+    font-size: 1.8rem;
 }
 
 /* 3. The Grid & Headers */
@@ -52,41 +53,46 @@ h1 {
     grid-template-rows: repeat(6, 1fr);
     gap: 4px;
     flex-grow: 1;
-    background-color: #ddd; /* The 'grid line' color */
+    background-color: #ddd; 
     border: 2px solid #333;
     border-top: none;
 }
 
 .day-cell {
     background: white;
-    padding: 5px;
+    padding: 6px;
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 4px; /* Space between event bars */
     overflow-y: auto;
-    min-height: 0; /* Important for grid scrolling */
+    min-height: 0;
+}
+
+/* Highlight for the current day */
+.day-cell[style*="border"] {
+    background-color: #fffdec !important; /* Soft yellow so it stands out on the wall */
 }
 
 .day-num {
     align-self: flex-end;
     font-weight: bold;
     color: #888;
-    font-size: 0.9rem;
-    margin-bottom: 4px;
+    font-size: 0.85rem;
+    margin-bottom: 2px;
 }
 
-/* 4. Event Styling (Colors set by JS) */
+/* 4. Event Styling (Updated for Chronological Order) */
 .event {
     color: white;
-    font-size: 0.8rem;
+    font-size: 0.75rem; /* Slightly smaller to fit time + text nicely */
     font-weight: 600;
-    padding: 3px 6px;
+    padding: 4px 6px;
     border-radius: 4px;
-    margin-bottom: 2px;
-    /* Optional: If you want to see the whole title instead of cutting it off */
-    white-space: normal; 
+    line-height: 1.2;
+    white-space: normal; /* Allows the title to wrap to a second line */
     word-wrap: break-word;
-    box-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    box-shadow: 1px 1px 2px rgba(0,0,0,0.15);
+    border-left: 3px solid rgba(0,0,0,0.2); /* Adds a little "edge" to the color block */
 }
 
 /* 5. Sidebar & Tasks */
@@ -103,13 +109,6 @@ h1 {
     padding-bottom: 5px;
     border-bottom: 2px solid #f0f2f5;
     margin-top: 20px;
-}
-
-.task-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 5px 0;
 }
 
 /* 6. Button Styling */
