@@ -3,7 +3,6 @@ body, html {
     margin: 0;
     padding: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    /* Changed to min-height to allow the whole page to expand if the calendar grows */
     min-height: 100vh;
     background-color: #f0f2f5;
     overflow-y: auto; 
@@ -50,7 +49,6 @@ h1 {
 .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    /* Changed from repeat(6, 1fr) to auto. This lets rows shrink or grow. */
     grid-template-rows: auto; 
     gap: 4px;
     background-color: #ddd; 
@@ -65,16 +63,28 @@ h1 {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    /* We removed overflow-y so the box physically expands instead of scrolling internally */
     overflow: hidden; 
-    /* This gives the boxes a nice minimum size when empty */
     min-height: 90px; 
+    transition: all 0.3s ease; /* Makes the transition smooth when the day changes */
 }
 
-/* Highlight for the current day - Blue border and subtle glow */
-.day-cell[style*="border"] {
-    background-color: #fffdec !important; 
-    box-shadow: inset 0 0 10px rgba(66, 133, 244, 0.1);
+/* --- NEW: Past Day Styling --- */
+.past-day {
+    background-color: #f2f2f2 !important; /* Slightly grey background */
+    opacity: 0.5; /* Makes everything inside look faded */
+    filter: grayscale(60%); /* Dulls the family colors */
+}
+
+.past-day .day-num {
+    color: #bbb;
+}
+
+/* --- NEW: Today Highlight --- */
+.today-day {
+    background-color: #fffdec !important; /* Soft yellow glow */
+    border: 2px solid #4285f4 !important; /* Bold blue border */
+    box-shadow: inset 0 0 10px rgba(66, 133, 244, 0.15);
+    z-index: 1;
 }
 
 .day-num {
@@ -88,7 +98,7 @@ h1 {
 /* 4. Event Styling */
 .event {
     color: white;
-    font-size: 0.8rem; /* Slightly bigger for the wall */
+    font-size: 0.8rem;
     font-weight: 600;
     padding: 4px 6px;
     border-radius: 4px;
