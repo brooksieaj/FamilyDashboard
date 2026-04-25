@@ -39,6 +39,25 @@
         </aside>
     </div>
 
+    <button onclick="openEventModal()" style="background-color: #0f9d58;">+ Add Event</button>
+
+    <div id="eventModal" class="modal">
+        <div class="modal-content">
+            <h2>Add Family Event</h2>
+            <input type="text" id="eventSummary" placeholder="Event Name (e.g. Soccer Practice)" required>
+            <select id="eventCalendar">
+                </select>
+            <div class="time-input">
+                <label>Date: <input type="date" id="eventDate"></label>
+                <label>Time: <input type="time" id="eventTime"></label>
+            </div>
+            <div class="modal-buttons">
+                <button onclick="closeEventModal()" style="background-color: #888;">Cancel</button>
+                <button onclick="submitEvent()">Add to Calendar</button>
+            </div>
+        </div>
+    </div>
+
     <script src="./script.js"></script>
 </body>
 </html>

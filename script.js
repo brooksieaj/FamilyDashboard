@@ -209,3 +209,59 @@ window.onload = () => {
     gapiLoaded(); 
     gisLoaded(); 
 };
+
+// 1. Open the pop-up and set default date/time
+function openEventModal() {
+    const modal = document.getElementById('eventModal');
+    const select = document.getElementById('eventCalendar');
+    
+    // Fill the dropdown with family members
+    select.innerHTML = FAMILY_CALENDARS.map(p => 
+        `<option value="${p.id}">${p.name}</option>`
+    ).join('');
+
+    // Default to today
+    document.getElementById('eventDate').valueAsDate = new Date();
+    modal.style.display = "block";
+}
+
+function closeEventModal() {
+    document.getElementById('eventModal').style.display = "none";
+}
+
+// 2. Submit to Google Calendar
+async function submitEvent() {
+    const summary = document.getElementById('eventSummary').value;
+    const calendarId = document.getElementById('eventCalendar').value;
+    const date = document.getElementById('eventDate').value;
+    const time = document.getElementById('eventTime').value;
+
+    if (!summary || !date) {
+        alert("Please enter at least a name and date!");
+        return;
+    }
+
+    const event = {
+        'summary': summary,
+        'start': { 'dateTime': `${date}T${time || '09:00'}:00Z`, 'timeZone': 'Australia/Perth' },
+        'end': { 'dateTime': `${date}T${time ? addOneHour(time) : '10:00'}:00Z`, 'timeZone': 'Australia/Perth' }
+    };
+
+    try {
+        await gapi.client.calendar.events.insert({
+            'calendarId': calendarId,
+            'resource': event
+        });
+        closeEventModal();
+        fetchCalendarEvents(); // Refresh the grid immediately
+    } catch (err) {
+        console.error("Error creating event:", err);
+        alert("Failed to add event. Check console.");
+    }
+}
+
+// Helper to set end time 1 hour later
+function addOneHour(timeStr) {
+    let [h, m] = timeStr.split(':').map(Number);
+    return `${String((h + 1) % 24).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
