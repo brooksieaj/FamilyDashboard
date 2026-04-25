@@ -183,3 +183,8 @@ button:hover {
     gap: 10px;
     margin-top: 10px;
 }
+
+.button-group {
+    display: flex;
+    align-items: center;
+}
