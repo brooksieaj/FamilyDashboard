@@ -78,3 +78,15 @@ button {
     border-radius: 5px;
     cursor: pointer;
 }
+
+.calendar-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr); /* Matches your 7-day grid */
+    text-align: center;
+    font-weight: bold;
+    padding: 10px 0;
+    background-color: #333;
+    color: white;
+    border-radius: 4px 4px 0 0;
+    margin-bottom: 2px;
+}
