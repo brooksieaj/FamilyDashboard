@@ -42,12 +42,9 @@
         </aside>
     </div>
 
-    /* ==========================================
-       POP-UP MODAL (Hidden by default)
-       ========================================== */
     <div id="eventModal" class="modal">
         <div class="modal-content">
-            <h2>Add Family Event</h2>
+            <h2 id="modalTitle">Add Family Event</h2>
             
             <label for="eventSummary">Event Name</label>
             <input type="text" id="eventSummary" placeholder="e.g. Soccer Practice" required>
@@ -68,8 +65,10 @@
             </div>
 
             <div class="modal-buttons">
+                <button id="deleteEventBtn" onclick="deleteEvent()" style="background-color: #db4437; margin-right: auto; display: none;">Delete</button>
+                
                 <button onclick="closeEventModal()" style="background-color: #888;">Cancel</button>
-                <button onclick="submitEvent()" style="background-color: #4285f4;">Add to Calendar</button>
+                <button id="submitEventBtn" onclick="submitEvent()" style="background-color: #4285f4;">Save Changes</button>
             </div>
         </div>
     </div>

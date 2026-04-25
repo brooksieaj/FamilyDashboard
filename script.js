@@ -16,6 +16,7 @@ const FAMILY_CALENDARS = [
 
 let tokenClient;
 let accessToken = null;
+let currentEditEvent = null; // Tracks if we are adding new or editing existing
 
 /* ==========================================
    2. GOOGLE API LOADING
@@ -43,7 +44,6 @@ function gisLoaded() {
             fetchCalendarEvents();
             fetchTasks(); 
 
-            // Auto-refresh every 5 minutes (300,000 ms)
             setInterval(() => {
                 fetchCalendarEvents();
                 fetchTasks();
@@ -61,7 +61,7 @@ function handleAuthClick() {
 }
 
 /* ==========================================
-   3. CALENDAR LOGIC (Sorted, Past-Greyed, & Cleaned)
+   3. CALENDAR RENDERING LOGIC
    ========================================== */
 async function fetchCalendarEvents() {
     const now = new Date();
@@ -76,7 +76,6 @@ async function fetchCalendarEvents() {
 
     try {
         let allEvents = [];
-
         for (const person of FAMILY_CALENDARS) {
             const response = await gapi.client.calendar.events.list({
                 'calendarId': person.id,
@@ -88,12 +87,11 @@ async function fetchCalendarEvents() {
             const events = (response.result.items || []).map(event => ({
                 ...event,
                 personName: person.name,
-                personColor: person.color
+                personColor: person.color,
+                calendarId: person.id // Store the source calendar
             }));
-            
             allEvents = allEvents.concat(events);
         }
-
         renderCalendarGrid(startOfWeek, allEvents);
     } catch (err) {
         console.error("Calendar Fetch Error:", err);
@@ -105,15 +103,13 @@ function renderCalendarGrid(startDate, allEvents) {
     grid.innerHTML = ''; 
     let loopDate = new Date(startDate);
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Normalized for comparison
+    today.setHours(0, 0, 0, 0);
 
     for (let i = 0; i < 42; i++) {
         const dayCell = document.createElement('div');
         dayCell.className = 'day-cell';
         
-        // 1. Determine if day is Past, Today, or Future
         const compareDate = new Date(loopDate);
         compareDate.setHours(0, 0, 0, 0);
 
@@ -126,7 +122,6 @@ function renderCalendarGrid(startDate, allEvents) {
         const monthLabel = monthNames[loopDate.getMonth()];
         dayCell.innerHTML = `<div class="day-num">${monthLabel} ${loopDate.getDate()}</div>`;
 
-        // 2. Local Date Comparison (Timezone Safe)
         const dayYear = loopDate.getFullYear();
         const dayMonth = loopDate.getMonth();
         const dayDate = loopDate.getDate();
@@ -138,7 +133,6 @@ function renderCalendarGrid(startDate, allEvents) {
                    eventStart.getDate() === dayDate;
         });
 
-        // 3. Chronological Sort (All-Day first)
         dailyEvents.sort((a, b) => {
             const aTime = a.start.dateTime ? new Date(a.start.dateTime).getTime() : 0;
             const bTime = b.start.dateTime ? new Date(b.start.dateTime).getTime() : 0;
@@ -149,6 +143,9 @@ function renderCalendarGrid(startDate, allEvents) {
             const eventDiv = document.createElement('div');
             eventDiv.className = 'event';
             eventDiv.style.backgroundColor = event.personColor;
+            
+            // Interaction: Open Modal on Click
+            eventDiv.onclick = () => openEventModal(event);
 
             let timeString = "";
             if (event.start.dateTime) {
@@ -166,12 +163,122 @@ function renderCalendarGrid(startDate, allEvents) {
 }
 
 /* ==========================================
-   4. TASKS LOGIC
+   4. EVENT MODAL LOGIC (ADD / EDIT / DELETE)
+   ========================================== */
+function openEventModal(event = null) {
+    const modal = document.getElementById('eventModal');
+    const select = document.getElementById('eventCalendar');
+    const deleteBtn = document.getElementById('deleteEventBtn');
+    const title = document.getElementById('modalTitle');
+    
+    // Populate dropdown
+    select.innerHTML = FAMILY_CALENDARS.map(p => 
+        `<option value="${p.id}">${p.name}</option>`
+    ).join('');
+
+    if (event) {
+        // EDIT MODE
+        currentEditEvent = event;
+        title.innerText = "Edit Event";
+        document.getElementById('eventSummary').value = event.summary;
+        select.value = event.calendarId;
+        
+        const start = new Date(event.start.dateTime || event.start.date);
+        document.getElementById('eventDate').value = start.toISOString().split('T')[0];
+        
+        if (event.start.dateTime) {
+            document.getElementById('eventTime').value = start.toTimeString().slice(0, 5);
+        } else {
+            document.getElementById('eventTime').value = '';
+        }
+        deleteBtn.style.display = "block";
+    } else {
+        // ADD MODE
+        currentEditEvent = null;
+        title.innerText = "Add Family Event";
+        document.getElementById('eventSummary').value = '';
+        document.getElementById('eventDate').valueAsDate = new Date();
+        document.getElementById('eventTime').value = '';
+        deleteBtn.style.display = "none";
+    }
+    modal.style.display = "block";
+}
+
+function closeEventModal() {
+    document.getElementById('eventModal').style.display = "none";
+}
+
+async function submitEvent() {
+    const summary = document.getElementById('eventSummary').value;
+    const calendarId = document.getElementById('eventCalendar').value;
+    const date = document.getElementById('eventDate').value;
+    const time = document.getElementById('eventTime').value;
+
+    if (!summary || !date) {
+        alert("Please enter a name and date.");
+        return;
+    }
+
+    let startObj, endObj;
+    if (time) {
+        startObj = { 'dateTime': `${date}T${time}:00+08:00` };
+        endObj = { 'dateTime': `${date}T${addOneHour(time)}:00+08:00` };
+    } else {
+        startObj = { 'date': date };
+        endObj = { 'date': date };
+    }
+
+    try {
+        const resource = { 'summary': summary, 'start': startObj, 'end': endObj };
+        
+        if (currentEditEvent) {
+            await gapi.client.calendar.events.update({
+                'calendarId': currentEditEvent.calendarId,
+                'eventId': currentEditEvent.id,
+                'resource': resource
+            });
+        } else {
+            await gapi.client.calendar.events.insert({
+                'calendarId': calendarId,
+                'resource': resource
+            });
+        }
+        
+        closeEventModal();
+        fetchCalendarEvents();
+    } catch (err) {
+        console.error("Save Error:", err);
+        alert("Failed to save event.");
+    }
+}
+
+async function deleteEvent() {
+    if (!currentEditEvent || !confirm("Delete this event?")) return;
+
+    try {
+        await gapi.client.calendar.events.delete({
+            'calendarId': currentEditEvent.calendarId,
+            'eventId': currentEditEvent.id
+        });
+        closeEventModal();
+        fetchCalendarEvents();
+    } catch (err) {
+        console.error("Delete Error:", err);
+    }
+}
+
+function addOneHour(timeStr) {
+    let [h, m] = timeStr.split(':').map(Number);
+    return `${String((h + 1) % 24).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+/* ==========================================
+   5. TASKS LOGIC
    ========================================== */
 async function fetchTasks() {
     try {
         const tasklistResponse = await gapi.client.tasks.tasklists.list();
-        const taskLists = tasklistResponse.result.items;
+        const taskLists = tasklistResponse.result.items || [];
         const container = document.getElementById('task-lists-container');
         container.innerHTML = ''; 
 
@@ -184,7 +291,7 @@ async function fetchTasks() {
             const tasks = taskResponse.result.items || [];
             const listDiv = document.createElement('div');
             listDiv.className = 'task-group';
-            listDiv.innerHTML = `<h3 style="border-bottom:1px solid #eee; margin-top:15px;">${list.title}</h3>`;
+            listDiv.innerHTML = `<h3>${list.title}</h3>`;
             
             tasks.forEach(task => {
                 const item = document.createElement('div');
@@ -192,16 +299,13 @@ async function fetchTasks() {
                 item.innerHTML = `<input type="checkbox"> <span style="font-size:0.9rem;">${task.title}</span>`;
                 listDiv.appendChild(item);
             });
-            
             container.appendChild(listDiv);
         }
-
-        // Add "Last Sync" timestamp to the bottom of the sidebar once all tasks are loaded
+        
         const syncTime = document.createElement('p');
         syncTime.style = "font-size:0.7rem; color:#ccc; text-align:center; margin-top: 20px;";
         syncTime.innerText = `Last sync: ${new Date().toLocaleTimeString()}`;
         container.appendChild(syncTime);
-
     } catch (err) {
         console.error("Tasks Fetch Error:", err);
     }
@@ -211,69 +315,3 @@ window.onload = () => {
     gapiLoaded(); 
     gisLoaded(); 
 };
-
-// 1. Open the pop-up and set default date/time
-function openEventModal() {
-    const modal = document.getElementById('eventModal');
-    const select = document.getElementById('eventCalendar');
-    
-    // Fill the dropdown with family members
-    select.innerHTML = FAMILY_CALENDARS.map(p => 
-        `<option value="${p.id}">${p.name}</option>`
-    ).join('');
-
-    // Default to today
-    document.getElementById('eventDate').valueAsDate = new Date();
-    modal.style.display = "block";
-}
-
-function closeEventModal() {
-    document.getElementById('eventModal').style.display = "none";
-}
-
-// 2. Submit to Google Calendar
-async function submitEvent() {
-    const summary = document.getElementById('eventSummary').value;
-    const calendarId = document.getElementById('eventCalendar').value;
-    const date = document.getElementById('eventDate').value;
-    const time = document.getElementById('eventTime').value;
-
-    if (!summary || !date) {
-        alert("Please enter at least a name and date!");
-        return;
-    }
-
-    // WA is UTC+8. We manually construct the ISO string to prevent shifting to London/UTC time.
-    let startDateTime, endDateTime;
-    
-    if (time) {
-        // Formats as: 2026-04-25T14:00:00+08:00
-        startDateTime = `${date}T${time}:00+08:00`;
-        endDateTime = `${date}T${addOneHour(time)}:00+08:00`;
-    }
-
-    const event = {
-        'summary': summary,
-        'start': time ? { 'dateTime': startDateTime } : { 'date': date },
-        'end': time ? { 'dateTime': endDateTime } : { 'date': date }
-    };
-
-    try {
-        await gapi.client.calendar.events.insert({
-            'calendarId': calendarId,
-            'resource': event
-        });
-        closeEventModal();
-        fetchCalendarEvents(); 
-        document.getElementById('eventSummary').value = ''; 
-    } catch (err) {
-        console.error("Error creating event:", err);
-        alert("Failed to add event.");
-    }
-}
-
-// Helper to set end time 1 hour later
-function addOneHour(timeStr) {
-    let [h, m] = timeStr.split(':').map(Number);
-    return `${String((h + 1) % 24).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-}

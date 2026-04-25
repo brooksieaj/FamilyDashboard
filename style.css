@@ -112,6 +112,11 @@ h1 {
     word-wrap: break-word;
     box-shadow: 1px 1px 2px rgba(0,0,0,0.15);
     border-left: 3px solid rgba(0,0,0,0.2);
+    cursor: pointer; /* Makes it clear the event is clickable for editing */
+}
+
+.event:hover {
+    filter: brightness(90%);
 }
 
 /* 5. Sidebar & Tasks */
@@ -147,7 +152,7 @@ button:hover {
     background-color: #357ae8;
 }
 
-/* 7. Modal (Add Event Dialog) */
+/* 7. Modal (Add/Edit Event Dialog) */
 .modal {
     display: none; 
     position: fixed;
@@ -155,7 +160,7 @@ button:hover {
     left: 0; top: 0;
     width: 100%; height: 100%;
     background-color: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px); /* Modern blur effect */
+    backdrop-filter: blur(4px);
 }
 
 .modal-content {
@@ -222,4 +227,14 @@ button:hover {
 .modal-buttons button {
     padding: 12px 24px;
     font-size: 1rem;
+}
+
+/* Delete Button Specific Styling */
+#deleteEventBtn {
+    background-color: #db4437; /* Google Red */
+    margin-right: auto; /* Pushes the button to the far left */
+}
+
+#deleteEventBtn:hover {
+    background-color: #c53929;
 }
