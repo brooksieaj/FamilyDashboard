@@ -125,7 +125,19 @@ function renderCalendarGrid(startDate, allEvents) {
             const eventDiv = document.createElement('div');
             eventDiv.className = 'event';
             eventDiv.style.backgroundColor = event.personColor;
-            eventDiv.innerText = `${event.personName}: ${event.summary}`;
+
+            // 1. Extract and Format the Time
+            let timeString = "";
+            if (event.start.dateTime) {
+                const start = new Date(event.start.dateTime);
+                // Formats time to "9:00 AM" or "3:30 PM"
+                timeString = start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + " ";
+            }
+
+            // 2. Set the text to "Time Summary" (e.g., "9:00 AM Soccer")
+            // If it's an "All Day" event, timeString will just be empty.
+            eventDiv.innerText = timeString + event.summary;
+            
             dayCell.appendChild(eventDiv);
         });
 

@@ -78,15 +78,15 @@ h1 {
 /* 4. Event Styling (Colors set by JS) */
 .event {
     color: white;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 600;
     padding: 3px 6px;
     border-radius: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-weight: 500;
+    margin-bottom: 2px;
+    /* Optional: If you want to see the whole title instead of cutting it off */
+    white-space: normal; 
+    word-wrap: break-word;
     box-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-    cursor: default;
 }
 
 /* 5. Sidebar & Tasks */
