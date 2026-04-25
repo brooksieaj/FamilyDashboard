@@ -15,6 +15,11 @@
             <header class="controls">
                 <h1>Our Family Calendar</h1>
                 <div class="button-group">
+                    <div id="countdown-display" onclick="openEventModal()" title="Click to edit countdown">
+                        <div id="countdown-label">COUNTDOWN</div>
+                        <div id="countdown-timer">00d 00h 00m 00s</div>
+                    </div>
+
                     <button onclick="openEventModal()" style="background-color: #0f9d58; margin-right: 10px;">+ Add Event</button>
                     <button id="auth_button" onclick="handleAuthClick()">Connect Google Account</button>
                 </div>
@@ -50,8 +55,7 @@
             <input type="text" id="eventSummary" placeholder="e.g. Soccer Practice" required>
             
             <label for="eventCalendar">Who is this for?</label>
-            <select id="eventCalendar">
-                </select>
+            <select id="eventCalendar"></select>
 
             <div class="time-input">
                 <div>
@@ -64,11 +68,28 @@
                 </div>
             </div>
 
-            <div class="modal-buttons">
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0 10px 0;">
+            <h3 style="margin-top: 0; color: #4285f4; font-size: 1.1rem;">Main Wall Countdown</h3>
+            
+            <label for="countdownEventName">Countdown Title</label>
+            <input type="text" id="countdownEventName" placeholder="e.g. Bali Trip! ✈️">
+            
+            <div class="time-input">
+                <div>
+                    <label>Target Date</label>
+                    <input type="date" id="countdownTargetDate">
+                </div>
+                <div>
+                    <label>Target Time</label>
+                    <input type="time" id="countdownTargetTime">
+                </div>
+            </div>
+
+            <div class="modal-buttons" style="margin-top: 25px;">
                 <button id="deleteEventBtn" onclick="deleteEvent()" style="background-color: #db4437; margin-right: auto; display: none;">Delete</button>
                 
                 <button onclick="closeEventModal()" style="background-color: #888;">Cancel</button>
-                <button id="submitEventBtn" onclick="submitEvent()" style="background-color: #4285f4;">Save Changes</button>
+                <button id="submitEventBtn" onclick="submitEvent()" style="background-color: #4285f4;">Save Everything</button>
             </div>
         </div>
     </div>
