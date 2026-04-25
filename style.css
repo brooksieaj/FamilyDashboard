@@ -28,6 +28,11 @@ body, html {
     margin-bottom: 15px;
 }
 
+.button-group {
+    display: flex;
+    align-items: center;
+}
+
 h1 {
     margin: 0;
     color: #333;
@@ -65,24 +70,24 @@ h1 {
     gap: 4px;
     overflow: hidden; 
     min-height: 90px; 
-    transition: all 0.3s ease; /* Makes the transition smooth when the day changes */
+    transition: all 0.3s ease;
 }
 
-/* --- NEW: Past Day Styling --- */
+/* Past Day Styling */
 .past-day {
-    background-color: #f2f2f2 !important; /* Slightly grey background */
-    opacity: 0.5; /* Makes everything inside look faded */
-    filter: grayscale(60%); /* Dulls the family colors */
+    background-color: #f2f2f2 !important;
+    opacity: 0.5;
+    filter: grayscale(60%);
 }
 
 .past-day .day-num {
     color: #bbb;
 }
 
-/* --- NEW: Today Highlight --- */
+/* Today Highlight */
 .today-day {
-    background-color: #fffdec !important; /* Soft yellow glow */
-    border: 2px solid #4285f4 !important; /* Bold blue border */
+    background-color: #fffdec !important;
+    border: 2px solid #4285f4 !important;
     box-shadow: inset 0 0 10px rgba(66, 133, 244, 0.15);
     z-index: 1;
 }
@@ -135,56 +140,86 @@ button {
     font-weight: bold;
     cursor: pointer;
     transition: background 0.2s;
+    font-family: inherit;
 }
 
 button:hover {
     background-color: #357ae8;
 }
 
-/* Modal Background */
+/* 7. Modal (Add Event Dialog) */
 .modal {
     display: none; 
     position: fixed;
-    z-index: 1000;
+    z-index: 2000;
     left: 0; top: 0;
     width: 100%; height: 100%;
-    background-color: rgba(0,0,0,0.5);
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px); /* Modern blur effect */
 }
 
-/* Modal Box */
 .modal-content {
     background-color: white;
-    margin: 10% auto;
-    padding: 25px;
-    border-radius: 12px;
-    width: 400px;
+    margin: 8% auto;
+    padding: 30px;
+    border-radius: 15px;
+    width: 450px;
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    gap: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    border: 1px solid #ccc;
+}
+
+.modal-content h2 {
+    margin-top: 0;
+    color: #333;
+    font-size: 1.5rem;
+    border-bottom: 2px solid #f0f2f5;
+    padding-bottom: 10px;
+}
+
+.modal-content label {
+    font-weight: bold;
+    font-size: 0.9rem;
+    color: #666;
+    margin-top: 5px;
 }
 
 .modal-content input, .modal-content select {
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
+    padding: 12px;
+    border: 2px solid #eee;
+    border-radius: 8px;
     font-size: 1rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.modal-content input:focus {
+    border-color: #4285f4;
 }
 
 .time-input {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.time-input div {
     display: flex;
-    gap: 10px;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 5px;
 }
 
 .modal-buttons {
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
-    margin-top: 10px;
+    gap: 12px;
+    margin-top: 20px;
 }
 
-.button-group {
-    display: flex;
-    align-items: center;
+.modal-buttons button {
+    padding: 12px 24px;
+    font-size: 1rem;
 }

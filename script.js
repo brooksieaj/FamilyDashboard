@@ -243,10 +243,19 @@ async function submitEvent() {
         return;
     }
 
+    // WA is UTC+8. We manually construct the ISO string to prevent shifting to London/UTC time.
+    let startDateTime, endDateTime;
+    
+    if (time) {
+        // Formats as: 2026-04-25T14:00:00+08:00
+        startDateTime = `${date}T${time}:00+08:00`;
+        endDateTime = `${date}T${addOneHour(time)}:00+08:00`;
+    }
+
     const event = {
         'summary': summary,
-        'start': { 'dateTime': `${date}T${time || '09:00'}:00Z`, 'timeZone': 'Australia/Perth' },
-        'end': { 'dateTime': `${date}T${time ? addOneHour(time) : '10:00'}:00Z`, 'timeZone': 'Australia/Perth' }
+        'start': time ? { 'dateTime': startDateTime } : { 'date': date },
+        'end': time ? { 'dateTime': endDateTime } : { 'date': date }
     };
 
     try {
@@ -255,10 +264,11 @@ async function submitEvent() {
             'resource': event
         });
         closeEventModal();
-        fetchCalendarEvents(); // Refresh the grid immediately
+        fetchCalendarEvents(); 
+        document.getElementById('eventSummary').value = ''; 
     } catch (err) {
         console.error("Error creating event:", err);
-        alert("Failed to add event. Check console.");
+        alert("Failed to add event.");
     }
 }
 
