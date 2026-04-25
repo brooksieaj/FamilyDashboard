@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Wall Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://apis.google.com/js/api.js" async defer></script>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <main class="calendar-section">
+            <header class="controls">
+                <h1>Our Family Calendar</h1>
+                <button id="auth_button" onclick="handleAuthClick()">Connect Google Account</button>
+            </header>
+            
+            <div id="calendar-grid" class="calendar-grid">
+                </div>
+        </main>
+
+        <aside class="task-sidebar">
+            <h2>Family Tasks</h2>
+            <div id="task-lists-container">
+                <p>Login to see tasks...</p>
+            </div>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
