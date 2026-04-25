@@ -209,17 +209,3 @@ window.onload = () => {
     gapiLoaded(); 
     gisLoaded(); 
 };
-Reminders for this update:
-CSS Dependency: This script.js relies on the .past-day and .today-day classes we added to your style.css. If you haven't pushed that CSS yet, the greyed-out effect won't show up.
-
-Hard Refresh: Since we changed the setInterval time, definitely do a Ctrl + Shift + R after pushing to ensure the browser clears out the old 30-minute timer.
-
-How does the greyed-out effect look on the Monday and Tuesday boxes? It should make the rest of your week stand out much more clearly!
-
-
-
-
-
-
-Gemini is AI and can make mistakes.
-
