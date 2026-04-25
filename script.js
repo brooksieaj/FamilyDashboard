@@ -117,19 +117,29 @@ function renderCalendarGrid(startDate, allEvents) {
             dayCell.style.backgroundColor = "#fdfdfd";
         }
 
-        const dateString = loopDate.toISOString().split('T')[0];
+        // --- REPLACE THE FILTERING AND SORTING LOGIC BELOW ---
         
-        // 1. FILTER for today
-        let dailyEvents = allEvents.filter(e => (e.start.dateTime || e.start.date).startsWith(dateString));
+        // 1. Local Date Comparison (Timezone Safe for WA)
+        const dayYear = loopDate.getFullYear();
+        const dayMonth = loopDate.getMonth();
+        const dayDate = loopDate.getDate();
 
-        // 2. SORT: All-day events first (0), then by time
+        const dailyEvents = allEvents.filter(e => {
+            const eventStart = new Date(e.start.dateTime || e.start.date);
+            return eventStart.getFullYear() === dayYear &&
+                   eventStart.getMonth() === dayMonth &&
+                   eventStart.getDate() === dayDate;
+        });
+
+        // 2. Chronological Sort (All-Day first)
         dailyEvents.sort((a, b) => {
             const aTime = a.start.dateTime ? new Date(a.start.dateTime).getTime() : 0;
             const bTime = b.start.dateTime ? new Date(b.start.dateTime).getTime() : 0;
             return aTime - bTime;
         });
 
-        // 3. RENDER
+        // --- END OF REPLACEMENT ---
+
         dailyEvents.forEach(event => {
             const eventDiv = document.createElement('div');
             eventDiv.className = 'event';
