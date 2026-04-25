@@ -1,92 +1,129 @@
+/* 1. Global Reset & Layout */
 body, html {
     margin: 0;
     padding: 0;
-    font-family: 'Segoe UI', sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     height: 100vh;
     background-color: #f0f2f5;
+    overflow: hidden; /* Prevents double scrollbars */
 }
 
 .dashboard-container {
     display: grid;
-    grid-template-columns: 1fr 350px;
+    grid-template-columns: 1fr 350px; /* Calendar takes most space, Sidebar is 350px */
     height: 100vh;
 }
 
+/* 2. Calendar Section */
 .calendar-section {
     padding: 20px;
     display: flex;
     flex-direction: column;
+    height: 100%;
 }
 
-/* UPDATED: Added background and border for the 'whiteboard grid' look */
-.calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr); 
-    grid-template-rows: repeat(6, 1fr);    
-    gap: 8px;
-    flex-grow: 1;
-    background-color: #ddd; 
-    border: 2px solid #333;
-}
-
-/* UPDATED: Added min-height and flex-direction to stack events vertically */
-.day-cell {
-    background: white;
-    border-radius: 4px;
-    padding: 8px;
-    border: 1px solid #ddd;
-    overflow-y: auto;
-    min-height: 120px; 
+.controls {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
 }
 
-/* UPDATED: Pushed number to the corner and faded it slightly */
-.day-num {
-    font-weight: bold;
-    color: #555;
-    margin-bottom: 5px;
-    align-self: flex-end;
-    font-size: 1.1rem;
-    opacity: 0.5;
+h1 {
+    margin: 0;
+    color: #333;
 }
 
-.event {
-    background-color: #4285f4;
-    color: white;
-    font-size: 0.8rem;
-    padding: 3px 6px;
-    border-radius: 3px;
-    margin-bottom: 3px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.task-sidebar {
-    background: #fff;
-    border-left: 2px solid #e0e0e0;
-    padding: 20px;
-}
-
-button {
-    padding: 10px 20px;
-    background-color: #4285f4;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
+/* 3. The Grid & Headers */
 .calendar-header {
     display: grid;
-    grid-template-columns: repeat(7, 1fr); /* Matches your 7-day grid */
+    grid-template-columns: repeat(7, 1fr);
     text-align: center;
     font-weight: bold;
     padding: 10px 0;
     background-color: #333;
     color: white;
-    border-radius: 4px 4px 0 0;
-    margin-bottom: 2px;
+    border-radius: 8px 8px 0 0;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(6, 1fr);
+    gap: 4px;
+    flex-grow: 1;
+    background-color: #ddd; /* The 'grid line' color */
+    border: 2px solid #333;
+    border-top: none;
+}
+
+.day-cell {
+    background: white;
+    padding: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    overflow-y: auto;
+    min-height: 0; /* Important for grid scrolling */
+}
+
+.day-num {
+    align-self: flex-end;
+    font-weight: bold;
+    color: #888;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+}
+
+/* 4. Event Styling (Colors set by JS) */
+.event {
+    color: white;
+    font-size: 0.75rem;
+    padding: 3px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+    box-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    cursor: default;
+}
+
+/* 5. Sidebar & Tasks */
+.task-sidebar {
+    background: #fff;
+    border-left: 2px solid #e0e0e0;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.task-group h3 {
+    font-size: 1.1rem;
+    color: #444;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #f0f2f5;
+    margin-top: 20px;
+}
+
+.task-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 0;
+}
+
+/* 6. Button Styling */
+button {
+    padding: 10px 20px;
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+button:hover {
+    background-color: #357ae8;
 }
