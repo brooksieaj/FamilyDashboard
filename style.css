@@ -10,7 +10,7 @@ body, html {
 
 .dashboard-container {
     display: grid;
-    grid-template-columns: 1fr 350px; 
+    grid-template-columns: 1fr; /* Modified to full width */
     min-height: 100vh;
 }
 
@@ -98,7 +98,6 @@ h1 {
     flex-grow: 1;
 }
 
-/* MODIFIED: Day Cell for Top Row Weather */
 .day-cell {
     background: white;
     padding: 6px;
@@ -110,7 +109,6 @@ h1 {
     transition: all 0.3s ease;
 }
 
-/* NEW: Top Row Layout (Date Left, Weather Right) */
 .day-top-row {
     display: flex;
     justify-content: space-between;
@@ -122,10 +120,9 @@ h1 {
     font-weight: bold;
     color: #888;
     font-size: 0.8rem;
-    align-self: flex-start; /* Date on left */
+    align-self: flex-start;
 }
 
-/* NEW: Weather Info in Cell */
 .cell-weather {
     display: flex;
     align-items: center;
@@ -179,9 +176,7 @@ h1 {
     cursor: pointer;
 }
 
-/* 5. Sidebar, Buttons, and Modals (Remaining Same) */
-.task-sidebar { background: #fff; border-left: 2px solid #e0e0e0; padding: 20px; overflow-y: auto; }
-.task-group h3 { font-size: 1.1rem; color: #444; padding-bottom: 5px; border-bottom: 2px solid #f0f2f5; margin-top: 20px; }
+/* 5. Buttons and Modals */
 button { padding: 10px 20px; background-color: #4285f4; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: background 0.2s; font-family: inherit; }
 button:hover { background-color: #357ae8; }
 .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); }

@@ -19,7 +19,7 @@ let accessToken = null;
 let currentEditEvent = null; 
 let isCountdownMode = false; 
 let countdownInterval = null; 
-let weatherForecast = null; // Stores the daily forecast data
+let weatherForecast = null; 
 
 /* ==========================================
    2. GOOGLE API LOADING
@@ -43,13 +43,11 @@ function gisLoaded() {
             document.getElementById('auth_button').innerText = "Refresh Board";
             
             // Initial Load
-            fetchWeatherData(); // Weather triggers calendar fetch once data is in
-            fetchTasks(); 
+            fetchWeatherData(); 
 
             // Auto-refresh every 5 mins
             setInterval(() => {
                 fetchWeatherData();
-                fetchTasks();
             }, 1000 * 60 * 5);
         },
     });
@@ -75,11 +73,10 @@ async function fetchWeatherData() {
         const response = await fetch(url);
         const data = await response.json();
         weatherForecast = data.daily;
-        // Now that weather is here, fetch and render calendar
         fetchCalendarEvents();
     } catch (err) {
         console.error("Weather Fetch Error:", err);
-        fetchCalendarEvents(); // Fallback: render calendar without weather
+        fetchCalendarEvents(); 
     }
 }
 
@@ -119,7 +116,6 @@ async function fetchCalendarEvents() {
 
             const events = (response.result.items || []).map(event => ({
                 ...event,
-                personName: person.name,
                 personColor: person.color,
                 calendarId: person.id 
             }));
@@ -152,7 +148,6 @@ function renderCalendarGrid(startDate, allEvents) {
             dayCell.classList.add('today-day');
         }
 
-        // WEATHER LOGIC FOR CELL
         let weatherHTML = '';
         if (weatherForecast) {
             const dateISO = loopDate.toISOString().split('T')[0];
@@ -169,7 +164,6 @@ function renderCalendarGrid(startDate, allEvents) {
             }
         }
 
-        // TOP ROW: Date (Left) and Weather (Right)
         const monthLabel = monthNames[loopDate.getMonth()];
         dayCell.innerHTML = `
             <div class="day-top-row">
@@ -217,7 +211,7 @@ function renderCalendarGrid(startDate, allEvents) {
 }
 
 /* ==========================================
-   5. MODALS, COUNTDOWN, TASKS (Remaining Same)
+   5. MODALS & COUNTDOWN ENGINE
    ========================================== */
 function openCountdownModal() {
     isCountdownMode = true;
@@ -349,29 +343,6 @@ function initCountdown() {
         const s = Math.floor((distance % (1000 * 60)) / 1000);
         document.getElementById('widget-timer').innerText = `${d}d ${h.toString().padStart(2,'0')}h ${m.toString().padStart(2,'0')}m ${s.toString().padStart(2,'0')}s`;
     }, 1000);
-}
-
-async function fetchTasks() {
-    try {
-        const tasklistResponse = await gapi.client.tasks.tasklists.list();
-        const taskLists = tasklistResponse.result.items || [];
-        const container = document.getElementById('task-lists-container');
-        container.innerHTML = ''; 
-        for (const list of taskLists) {
-            const taskResponse = await gapi.client.tasks.tasks.list({ tasklist: list.id, showCompleted: false });
-            const tasks = taskResponse.result.items || [];
-            const listDiv = document.createElement('div');
-            listDiv.className = 'task-group';
-            listDiv.innerHTML = `<h3>${list.title}</h3>`;
-            tasks.forEach(task => {
-                const item = document.createElement('div');
-                item.style.padding = "4px 0";
-                item.innerHTML = `<input type="checkbox"> <span style="font-size:0.9rem;">${task.title}</span>`;
-                listDiv.appendChild(item);
-            });
-            container.appendChild(listDiv);
-        }
-    } catch (err) { console.error("Tasks Fetch Error:", err); }
 }
 
 window.onload = () => { 
