@@ -3,16 +3,16 @@ body, html {
     margin: 0;
     padding: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    font-size: 18px; /* Increased from default base to scale up relative units */
-    min-height: 100vh;
+    font-size: 18px; 
+    height: 100vh; /* Set exact viewport height */
     background-color: #f0f2f5;
-    overflow-y: auto; 
+    overflow: hidden; /* Prevent body scrolling; we will scroll inside the section instead */
 }
 
 .dashboard-container {
     display: grid;
     grid-template-columns: 1fr; 
-    min-height: 100vh;
+    height: 100vh;
 }
 
 /* 2. Calendar Section */
@@ -20,6 +20,18 @@ body, html {
     padding: 20px;
     display: flex;
     flex-direction: column;
+    height: calc(100vh - 40px); /* Fill screen minus padding */
+    overflow-y: auto; /* Allow scrolling inside the dashboard container */
+}
+
+/* Sticky Wrapper for Header Controls & Weekdays */
+.sticky-header-container {
+    position: sticky;
+    top: -20px; /* Counteracts the parent section padding */
+    z-index: 100;
+    background-color: #f0f2f5; /* Matches body background to hide content scrolling behind it */
+    padding-top: 20px;
+    margin-bottom: 0;
 }
 
 .controls {
@@ -54,14 +66,14 @@ body, html {
 }
 
 #widget-label {
-    font-size: 0.8rem; /* Increased from 0.65rem */
+    font-size: 0.8rem; 
     font-weight: bold;
     color: #888;
     text-transform: uppercase;
 }
 
 #widget-timer {
-    font-size: 1.2rem; /* Increased from 1rem */
+    font-size: 1.2rem; 
     font-family: 'Courier New', Courier, monospace;
     font-weight: bold;
     color: #db4437;
@@ -74,7 +86,7 @@ body, html {
 h1 {
     margin: 0;
     color: #333;
-    font-size: 2.1rem; /* Increased from 1.8rem */
+    font-size: 2.1rem; 
 }
 
 /* 3. The Grid & Headers */
@@ -84,7 +96,7 @@ h1 {
     text-align: center;
     font-weight: bold;
     padding: 12px 0;
-    font-size: 1.15rem; /* Increased by ~2pt equivalent */
+    font-size: 1.15rem; 
     background-color: #333;
     color: white;
     border-radius: 8px 8px 0 0;
@@ -97,7 +109,7 @@ h1 {
     background-color: #ddd; 
     border: 2px solid #333;
     border-top: none;
-    flex-grow: 1;
+    /* Removed flex-grow to let grid expand naturally with its content */
 }
 
 .day-cell {
@@ -107,7 +119,7 @@ h1 {
     flex-direction: column;
     gap: 4px;
     overflow: hidden; 
-    min-height: 100px; 
+    min-height: 110px; /* Slightly heightened for density scroll look */
     transition: all 0.3s ease;
 }
 
@@ -121,7 +133,7 @@ h1 {
 .day-num {
     font-weight: bold;
     color: #888;
-    font-size: 0.95rem; /* Increased from 0.8rem */
+    font-size: 0.95rem; 
     align-self: flex-start;
 }
 
@@ -133,12 +145,12 @@ h1 {
 }
 
 .cell-weather img {
-    width: 28px; /* Slightly upsized icon to match typography */
+    width: 28px; 
     height: 28px;
 }
 
 .cell-temp {
-    font-size: 0.85rem; /* Increased from 0.7rem */
+    font-size: 0.85rem; 
     color: #444;
     font-weight: bold;
     line-height: 1.1;
@@ -166,7 +178,7 @@ h1 {
 /* 4. Event Styling */
 .event {
     color: white;
-    font-size: 0.9rem; /* Increased from 0.75rem */
+    font-size: 0.9rem; 
     font-weight: 600;
     padding: 5px 8px;
     border-radius: 4px;
@@ -186,7 +198,7 @@ button {
     border: none; 
     border-radius: 6px; 
     font-weight: bold; 
-    font-size: 1.05rem; /* Scaled up buttons */
+    font-size: 1.05rem; 
     cursor: pointer; 
     transition: background 0.2s; 
     font-family: inherit; 
@@ -195,14 +207,4 @@ button:hover { background-color: #357ae8; }
 
 .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); }
 .modal-content { background-color: white; margin: 8% auto; padding: 30px; border-radius: 15px; width: 480px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid #ccc; }
-.modal-content h2 { margin-top: 0; color: #333; font-size: 1.7rem; border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; }
-.modal-content label { font-weight: bold; font-size: 1.05rem; color: #666; margin-top: 5px; }
-.modal-content input, .modal-content select { padding: 12px; border: 2px solid #eee; border-radius: 8px; font-size: 1.15rem; font-family: inherit; outline: none; transition: border-color 0.2s; }
-.modal-content input:focus { border-color: #4285f4; }
-
-.time-input { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-.time-input div { display: flex; flex-direction: column; gap: 5px; }
-.modal-buttons { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; }
-.modal-buttons button { padding: 12px 24px; font-size: 1.15rem; }
-#deleteEventBtn { background-color: #db4437; margin-right: auto; }
-#deleteEventBtn:hover { background-color: #c53929; }
+.modal-content h2 { margin-top: 0; color: #333
