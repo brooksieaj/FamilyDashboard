@@ -10,7 +10,7 @@ async function fetchCalendarEvents() {
     startOfWeek.setHours(0, 0, 0, 0);
 
     const endOfPeriod = new Date(startOfWeek);
-    // Modified: Expanded timeline to 52 weeks (52 weeks * 7 days)
+    // Expanded timeline to 52 weeks (52 weeks * 7 days)
     endOfPeriod.setDate(startOfWeek.getDate() + (52 * 7));
 
     try {
@@ -44,7 +44,7 @@ function renderCalendarGrid(startDate, allEvents) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Modified: Loop 364 days (52 weeks * 7 elements per week)
+    // Loop 364 days (52 weeks * 7 elements per week)
     for (let i = 0; i < (52 * 7); i++) {
         const dayCell = document.createElement('div');
         dayCell.className = 'day-cell';
