@@ -20,6 +20,7 @@ body, html {
     padding: 20px;
     display: flex;
     flex-direction: column;
+    height: calc(100vh - 40px); /* Forces the calendar view to lock to viewport height */
 }
 
 .controls {
@@ -54,14 +55,14 @@ body, html {
 }
 
 #widget-label {
-    font-size: 0.8rem; /* Increased from 0.65rem */
+    font-size: 0.8rem; 
     font-weight: bold;
     color: #888;
     text-transform: uppercase;
 }
 
 #widget-timer {
-    font-size: 1.2rem; /* Increased from 1rem */
+    font-size: 1.2rem; 
     font-family: 'Courier New', Courier, monospace;
     font-weight: bold;
     color: #db4437;
@@ -74,7 +75,7 @@ body, html {
 h1 {
     margin: 0;
     color: #333;
-    font-size: 2.1rem; /* Increased from 1.8rem */
+    font-size: 2.1rem; 
 }
 
 /* 3. The Grid & Headers */
@@ -84,7 +85,7 @@ h1 {
     text-align: center;
     font-weight: bold;
     padding: 12px 0;
-    font-size: 1.15rem; /* Increased by ~2pt equivalent */
+    font-size: 1.15rem; 
     background-color: #333;
     color: white;
     border-radius: 8px 8px 0 0;
@@ -93,11 +94,16 @@ h1 {
 .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(6, 1fr); /* FIX: Ensures the 6 rows evenly stretch vertically */
     gap: 4px;
     background-color: #ddd; 
     border: 2px solid #333;
     border-top: none;
     flex-grow: 1;
+    
+    /* FIX: Prevents text selection on multi-taps, ensuring click actions fire cleanly on touch */
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 .day-cell {
@@ -121,7 +127,7 @@ h1 {
 .day-num {
     font-weight: bold;
     color: #888;
-    font-size: 0.95rem; /* Increased from 0.8rem */
+    font-size: 0.95rem; 
     align-self: flex-start;
 }
 
@@ -133,12 +139,12 @@ h1 {
 }
 
 .cell-weather img {
-    width: 28px; /* Slightly upsized icon to match typography */
+    width: 28px; 
     height: 28px;
 }
 
 .cell-temp {
-    font-size: 0.85rem; /* Increased from 0.7rem */
+    font-size: 0.85rem; 
     color: #444;
     font-weight: bold;
     line-height: 1.1;
@@ -166,7 +172,7 @@ h1 {
 /* 4. Event Styling */
 .event {
     color: white;
-    font-size: 0.9rem; /* Increased from 0.75rem */
+    font-size: 0.9rem; 
     font-weight: 600;
     padding: 5px 8px;
     border-radius: 4px;
@@ -186,7 +192,7 @@ button {
     border: none; 
     border-radius: 6px; 
     font-weight: bold; 
-    font-size: 1.05rem; /* Scaled up buttons */
+    font-size: 1.05rem; 
     cursor: pointer; 
     transition: background 0.2s; 
     font-family: inherit; 
