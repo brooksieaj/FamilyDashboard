@@ -139,12 +139,14 @@ function renderCalendarGrid(startDate, allEvents) {
         const dayCell = document.createElement('div');
         dayCell.className = 'day-cell';
         
+        // Normalize loop date to midnight for pure day-to-day comparison
         const compareDate = new Date(loopDate);
         compareDate.setHours(0, 0, 0, 0);
+        const compareTime = compareDate.getTime();
 
-        if (compareDate < today) {
+        if (compareTime < today.getTime()) {
             dayCell.classList.add('past-day');
-        } else if (compareDate.getTime() === today.getTime()) {
+        } else if (compareTime === today.getTime()) {
             dayCell.classList.add('today-day');
         }
 
@@ -172,18 +174,31 @@ function renderCalendarGrid(startDate, allEvents) {
             </div>
         `;
 
-        const dayYear = loopDate.getFullYear();
-        const dayMonth = loopDate.getMonth();
-        const dayDate = loopDate.getDate();
-
+        // NEW FILTER: Check if the loop day falls anywhere within the event's start and end range
         const dailyEvents = allEvents.filter(e => {
             const eventStart = new Date(e.start.dateTime || e.start.date);
-            return eventStart.getFullYear() === dayYear &&
-                   eventStart.getMonth() === dayMonth &&
-                   eventStart.getDate() === dayDate;
+            const eventEnd = new Date(e.end.dateTime || e.end.date);
+            
+            // Normalize event bounds to midnight for standard multi-day matching
+            const startMidnight = new Date(eventStart).setHours(0,0,0,0);
+            let endMidnight = new Date(eventEnd).setHours(0,0,0,0);
+
+            // Google Calendar handles "All Day" end dates exclusively (e.g. an all-day event on Mon ends Tue at 00:00).
+            // If it's an all-day event and spans multiple days, pull back the boundary by 1ms so it doesn't leak an extra day.
+            if (e.end.date && (eventEnd - eventStart > 86400000)) {
+                endMidnight = new Date(eventEnd.getTime() - 1).setHours(0,0,0,0);
+            }
+
+            return compareTime >= startMidnight && compareTime <= endMidnight;
         });
 
+        // Sorting: Keep multi-day/all-day items up top, timed events ordered sequentially
         dailyEvents.sort((a, b) => {
+            const aIsAllDay = !a.start.dateTime;
+            const bIsAllDay = !b.start.dateTime;
+            if (aIsAllDay && !bIsAllDay) return -1;
+            if (!aIsAllDay && bIsAllDay) return 1;
+
             const aTime = a.start.dateTime ? new Date(a.start.dateTime).getTime() : 0;
             const bTime = b.start.dateTime ? new Date(b.start.dateTime).getTime() : 0;
             return aTime - bTime;
@@ -196,9 +211,17 @@ function renderCalendarGrid(startDate, allEvents) {
             eventDiv.onclick = () => openEventModal(event);
 
             let timeString = "";
+            // Only show a specific timestamp if it's a timed event AND it's the actual start day of that event
             if (event.start.dateTime) {
-                const start = new Date(event.start.dateTime);
-                timeString = start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + " ";
+                const eventStart = new Date(event.start.dateTime);
+                if (eventStart.getFullYear() === loopDate.getFullYear() &&
+                    eventStart.getMonth() === loopDate.getMonth() &&
+                    eventStart.getDate() === loopDate.getDate()) {
+                    timeString = eventStart.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + " ";
+                } else {
+                    // Visual cue to show it's a continuation from a previous day
+                    timeString = "→ "; 
+                }
             }
 
             eventDiv.innerText = timeString + event.summary;
