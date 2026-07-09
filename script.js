@@ -192,16 +192,36 @@ function renderCalendarGrid(startDate, allEvents) {
             return compareTime >= startMidnight && compareTime <= endMidnight;
         });
 
-        // Sorting: Keep multi-day/all-day items up top, timed events ordered sequentially
+        // Sorting: Multi-day events first (longest first), then single all-day, then timed events
         dailyEvents.sort((a, b) => {
+            const aStart = new Date(a.start.dateTime || a.start.date).getTime();
+            const aEnd = new Date(a.end.dateTime || a.end.date).getTime();
+            const bStart = new Date(b.start.dateTime || b.start.date).getTime();
+            const bEnd = new Date(b.end.dateTime || b.end.date).getTime();
+
+            const aDuration = aEnd - aStart;
+            const bDuration = bEnd - bStart;
+
+            const aIsMultiDay = aDuration > 86400000; // Longer than 24 hours
+            const bIsMultiDay = bDuration > 86400000;
+
+            // 1. Prioritize Multi-day events over everything else
+            if (aIsMultiDay && !bIsMultiDay) return -1;
+            if (!aIsMultiDay && bIsMultiDay) return 1;
+
+            // 2. If both are multi-day, put the longer event on top
+            if (aIsMultiDay && bIsMultiDay) {
+                return bDuration - aDuration; 
+            }
+
+            // 3. Handle single all-day events (not multi-day, but no specific time) next
             const aIsAllDay = !a.start.dateTime;
             const bIsAllDay = !b.start.dateTime;
             if (aIsAllDay && !bIsAllDay) return -1;
             if (!aIsAllDay && bIsAllDay) return 1;
 
-            const aTime = a.start.dateTime ? new Date(a.start.dateTime).getTime() : 0;
-            const bTime = b.start.dateTime ? new Date(b.start.dateTime).getTime() : 0;
-            return aTime - bTime;
+            // 4. Finally, sort standard timed events sequentially by their start time
+            return aStart - bStart;
         });
 
         dailyEvents.forEach(event => {
