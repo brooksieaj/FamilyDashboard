@@ -133,7 +133,6 @@ function renderCalendarGrid(startDate, allEvents) {
     
     // Set up the grid click delegation handler once here
     grid.onclick = (e) => {
-        // Find the nearest parent day cell that has our custom date tag
         const cell = e.target.closest('.day-cell');
         if (cell && cell.dataset.date) {
             openEventModal(null, cell.dataset.date);
@@ -149,8 +148,11 @@ function renderCalendarGrid(startDate, allEvents) {
         const dayCell = document.createElement('div');
         dayCell.className = 'day-cell';
         
-        // Format the exact date string for this loop cell (YYYY-MM-DD)
-        const cellDateString = loopDate.toISOString().split('T')[0];
+        // FIX: Construct the exact YYYY-MM-DD string locally to prevent UTC conversion down-shifting
+        const year = loopDate.getFullYear();
+        const month = String(loopDate.getMonth() + 1).padStart(2, '0');
+        const day = String(loopDate.getDate()).padStart(2, '0');
+        const cellDateString = `${year}-${month}-${day}`;
         
         // Save the date explicitly into a custom HTML attribute
         dayCell.setAttribute('data-date', cellDateString);
@@ -168,8 +170,8 @@ function renderCalendarGrid(startDate, allEvents) {
 
         let weatherHTML = '';
         if (weatherForecast) {
-            const dateISO = loopDate.toISOString().split('T')[0];
-            const wIdx = weatherForecast.time.indexOf(dateISO);
+            // FIX: Using the localized cellDateString to look up weather forecast indexes perfectly
+            const wIdx = weatherForecast.time.indexOf(cellDateString);
             if (wIdx !== -1) {
                 const max = Math.round(weatherForecast.temperature_2m_max[wIdx]);
                 const min = Math.round(weatherForecast.temperature_2m_min[wIdx]);
@@ -234,7 +236,6 @@ function renderCalendarGrid(startDate, allEvents) {
             eventDiv.className = 'event';
             eventDiv.style.backgroundColor = event.personColor;
             
-            // Stop click bubbling so editing existing events doesn't prompt creating a new one
             eventDiv.onclick = (e) => {
                 e.stopPropagation();
                 openEventModal(event);
@@ -295,8 +296,14 @@ function openEventModal(event = null, defaultDate = null) {
         title.innerText = "Edit Event";
         document.getElementById('eventSummary').value = event.summary;
         select.value = event.calendarId;
+        
+        // FIX: Also localized the edit event parser so opening an existing item doesn't drop back a day
         const start = new Date(event.start.dateTime || event.start.date);
-        document.getElementById('eventDate').value = start.toISOString().split('T')[0];
+        const year = start.getFullYear();
+        const month = String(start.getMonth() + 1).padStart(2, '0');
+        const day = String(start.getDate()).padStart(2, '0');
+        document.getElementById('eventDate').value = `${year}-${month}-${day}`;
+        
         document.getElementById('eventTime').value = event.start.dateTime ? start.toTimeString().slice(0, 5) : '';
         deleteBtn.style.display = "block";
     } else {
@@ -304,11 +311,14 @@ function openEventModal(event = null, defaultDate = null) {
         title.innerText = "Add Family Event";
         document.getElementById('eventSummary').value = '';
         
-        // If clicked on a specific grid cell, use its date. Otherwise default to today.
         if (defaultDate) {
             document.getElementById('eventDate').value = defaultDate;
         } else {
-            document.getElementById('eventDate').valueAsDate = new Date();
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            document.getElementById('eventDate').value = `${year}-${month}-${day}`;
         }
         
         document.getElementById('eventTime').value = '';
