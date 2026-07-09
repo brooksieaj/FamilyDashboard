@@ -127,11 +127,21 @@ async function fetchCalendarEvents() {
     }
 }
 
+// Helper to safely parse any Google Calendar date field into absolute Local Time bounds
+function parseToLocalMidnight(dateField) {
+    if (!dateField) return 0;
+    if (dateField.dateTime) {
+        return new Date(dateField.dateTime).setHours(0, 0, 0, 0);
+    }
+    // All-day strings (YYYY-MM-DD) are parsed strictly as local numbers to prevent UTC shift bugs
+    const [year, month, day] = dateField.date.split('-').map(Number);
+    return new Date(year, month - 1, day, 0, 0, 0, 0).getTime();
+}
+
 function renderCalendarGrid(startDate, allEvents) {
     const grid = document.getElementById('calendar-grid');
     grid.innerHTML = ''; 
     
-    // Set up the grid click delegation handler once here
     grid.onclick = (e) => {
         const cell = e.target.closest('.day-cell');
         if (cell && cell.dataset.date) {
@@ -148,19 +158,15 @@ function renderCalendarGrid(startDate, allEvents) {
         const dayCell = document.createElement('div');
         dayCell.className = 'day-cell';
         
-        // FIX: Construct the exact YYYY-MM-DD string locally to prevent UTC conversion down-shifting
         const year = loopDate.getFullYear();
         const month = String(loopDate.getMonth() + 1).padStart(2, '0');
         const day = String(loopDate.getDate()).padStart(2, '0');
         const cellDateString = `${year}-${month}-${day}`;
         
-        // Save the date explicitly into a custom HTML attribute
         dayCell.setAttribute('data-date', cellDateString);
         dayCell.style.cursor = 'pointer';
         
-        const compareDate = new Date(loopDate);
-        compareDate.setHours(0, 0, 0, 0);
-        const compareTime = compareDate.getTime();
+        const compareTime = new Date(year, loopDate.getMonth(), loopDate.getDate(), 0, 0, 0, 0).getTime();
 
         if (compareTime < today.getTime()) {
             dayCell.classList.add('past-day');
@@ -170,7 +176,6 @@ function renderCalendarGrid(startDate, allEvents) {
 
         let weatherHTML = '';
         if (weatherForecast) {
-            // FIX: Using the localized cellDateString to look up weather forecast indexes perfectly
             const wIdx = weatherForecast.time.indexOf(cellDateString);
             if (wIdx !== -1) {
                 const max = Math.round(weatherForecast.temperature_2m_max[wIdx]);
@@ -192,15 +197,19 @@ function renderCalendarGrid(startDate, allEvents) {
             </div>
         `;
 
-        // Filter: Check if the loop day falls anywhere within the event's start and end range
+        // Filter: Use safe midnight helper to match the range correctly
         const dailyEvents = allEvents.filter(e => {
-            const eventStart = new Date(e.start.dateTime || e.start.date);
-            const eventEnd = new Date(e.end.dateTime || e.end.date);
-            const startMidnight = new Date(eventStart).setHours(0,0,0,0);
-            let endMidnight = new Date(eventEnd).setHours(0,0,0,0);
+            const startMidnight = parseToLocalMidnight(e.start);
+            let endMidnight = parseToLocalMidnight(e.end);
 
-            if (e.end.date && (eventEnd - eventStart > 86400000)) {
-                endMidnight = new Date(eventEnd.getTime() - 1).setHours(0,0,0,0);
+            // If it's an all-day event, Google sets the end date exclusively to the next day.
+            // We trim 1 millisecond off true multi-day events to stop them bleeding over visually.
+            if (e.end.date && (new Date(e.end.date) - new Date(e.start.date) > 86400000)) {
+                const [y, m, d] = e.end.date.split('-').map(Number);
+                endMidnight = new Date(new Date(y, m - 1, d, 0, 0, 0, 0).getTime() - 1).setHours(0,0,0,0);
+            } else if (e.end.date) {
+                // Single day all-day event needs to sit cleanly on its start date
+                endMidnight = startMidnight;
             }
 
             return compareTime >= startMidnight && compareTime <= endMidnight;
@@ -208,10 +217,10 @@ function renderCalendarGrid(startDate, allEvents) {
 
         // Sorting: Multi-day events first (longest first), then single all-day, then timed events
         dailyEvents.sort((a, b) => {
-            const aStart = new Date(a.start.dateTime || a.start.date).getTime();
-            const aEnd = new Date(a.end.dateTime || a.end.date).getTime();
-            const bStart = new Date(b.start.dateTime || b.start.date).getTime();
-            const bEnd = new Date(b.end.dateTime || b.end.date).getTime();
+            const aStart = parseToLocalMidnight(a.start);
+            const aEnd = parseToLocalMidnight(a.end);
+            const bStart = parseToLocalMidnight(b.start);
+            const bEnd = parseToLocalMidnight(b.end);
 
             const aDuration = aEnd - aStart;
             const bDuration = bEnd - bStart;
@@ -228,7 +237,9 @@ function renderCalendarGrid(startDate, allEvents) {
             if (aIsAllDay && !bIsAllDay) return -1;
             if (!aIsAllDay && bIsAllDay) return 1;
 
-            return aStart - bStart;
+            const aTime = a.start.dateTime ? new Date(a.start.dateTime).getTime() : 0;
+            const bTime = b.start.dateTime ? new Date(b.start.dateTime).getTime() : 0;
+            return aTime - bTime;
         });
 
         dailyEvents.forEach(event => {
@@ -297,7 +308,6 @@ function openEventModal(event = null, defaultDate = null) {
         document.getElementById('eventSummary').value = event.summary;
         select.value = event.calendarId;
         
-        // FIX: Also localized the edit event parser so opening an existing item doesn't drop back a day
         const start = new Date(event.start.dateTime || event.start.date);
         const year = start.getFullYear();
         const month = String(start.getMonth() + 1).padStart(2, '0');
@@ -343,7 +353,20 @@ async function submitEvent() {
     } else {
         const calendarId = document.getElementById('eventCalendar').value;
         let startObj = time ? { 'dateTime': `${date}T${time}:00+08:00` } : { 'date': date };
-        let endObj = time ? { 'dateTime': `${date}T${addOneHour(time)}:00+08:00` } : { 'date': date };
+        
+        // For all-day events, Google expects the end date to be the next day (exclusive boundary)
+        let endObj;
+        if (time) {
+            endObj = { 'dateTime': `${date}T${addOneHour(time)}:00+08:00` };
+        } else {
+            const [y, m, d] = date.split('-').map(Number);
+            const nextDay = new Date(y, m - 1, d + 1);
+            const ny = nextDay.getFullYear();
+            const nm = String(nextDay.getMonth() + 1).padStart(2, '0');
+            const nd = String(nextDay.getDate()).padStart(2, '0');
+            endObj = { 'date': `${ny}-${nm}-${nd}` };
+        }
+
         try {
             const resource = { 'summary': summary, 'start': startObj, 'end': endObj };
             if (currentEditEvent) {
