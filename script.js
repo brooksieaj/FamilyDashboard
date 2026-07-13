@@ -22,7 +22,7 @@ let countdownInterval = null;
 let weatherForecast = null; 
 
 /* ==========================================
-   2. GOOGLE API LOADING
+   2. GOOGLE API LOADING WITH AUTO-RESTORE
    ========================================== */
 function gapiLoaded() {
     gapi.load('client', async () => {
@@ -30,6 +30,11 @@ function gapiLoaded() {
         await gapi.client.load('calendar', 'v3');
         await gapi.client.load('tasks', 'v1');
         console.log("Google Libraries Loaded");
+        
+        // If calendar-grid exists on this page, look for data immediately if authorized
+        if (accessToken && document.getElementById('calendar-grid')) {
+            fetchWeatherData();
+        }
     });
 }
 
@@ -39,406 +44,79 @@ function gisLoaded() {
         scope: SCOPES,
         callback: (tokenResponse) => {
             if (tokenResponse.error !== undefined) throw (tokenResponse);
-            accessToken = tokenResponse.access_token;
-            document.getElementById('auth_button').innerText = "Refresh Board";
             
-            // Initial Load
-            fetchWeatherData(); 
+            accessToken = tokenResponse.access_token;
+            localStorage.setItem('google_session_active', 'true');
+            
+            // Sync UI elements on Settings Page
+            updateSettingsUI(true);
 
-            // Auto-refresh every 5 mins
-            setInterval(() => {
+            // Execute core routines for Calendar page if present
+            if (document.getElementById('calendar-grid')) {
                 fetchWeatherData();
-            }, 1000 * 60 * 5);
+            }
         },
     });
-}
 
-function handleAuthClick() {
-    if (accessToken === null) {
-        tokenClient.requestAccessToken({ prompt: 'consent' });
-    } else {
+    // AUTO-LOGIN RESCUE FOR PAGE REFRESHES:
+    // If the flag is set, request a token silently without standard prompt interruptions
+    if (localStorage.getItem('google_session_active') === 'true') {
+        console.log("Restoring Google token session in background...");
         tokenClient.requestAccessToken({ prompt: '' });
     }
 }
 
-/* ==========================================
-   3. WEATHER FETCHING (Safety Bay)
-   ========================================== */
-async function fetchWeatherData() {
-    const lat = -32.30;
-    const lon = 115.71;
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`;
-
-    try {
-        const response = await fetch(url);
-        const data = await response.json();
-        weatherForecast = data.daily;
-        fetchCalendarEvents();
-    } catch (err) {
-        console.error("Weather Fetch Error:", err);
-        fetchCalendarEvents(); 
-    }
+function handleAuthClick() {
+    // If user interacts directly, prompt consent just to ensure fresh scopes
+    tokenClient.requestAccessToken({ prompt: 'consent' });
 }
 
-function getWeatherIcon(code) {
-    if (code === 0) return 'https://openweathermap.org/img/wn/01d@2x.png'; 
-    if (code >= 1 && code <= 3) return 'https://openweathermap.org/img/wn/02d@2x.png'; 
-    if (code >= 45 && code <= 48) return 'https://openweathermap.org/img/wn/50d@2x.png'; 
-    if (code >= 51 && code <= 67) return 'https://openweathermap.org/img/wn/10d@2x.png'; 
-    if (code >= 80 && code <= 82) return 'https://openweathermap.org/img/wn/09d@2x.png'; 
-    if (code >= 95) return 'https://openweathermap.org/img/wn/11d@2x.png'; 
-    return 'https://openweathermap.org/img/wn/03d@2x.png'; 
-}
-
-/* ==========================================
-   4. CALENDAR RENDERING LOGIC
-   ========================================= */
-async function fetchCalendarEvents() {
-    const now = new Date();
-    const day = now.getDay(); 
-    const diff = (day === 0 ? -6 : 1) - day;
-    const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() + diff);
-    startOfWeek.setHours(0, 0, 0, 0);
-
-    const endOfPeriod = new Date(startOfWeek);
-    endOfPeriod.setDate(startOfWeek.getDate() + 42);
-
-    try {
-        let allEvents = [];
-        for (const person of FAMILY_CALENDARS) {
-            const response = await gapi.client.calendar.events.list({
-                'calendarId': person.id,
-                'timeMin': startOfWeek.toISOString(),
-                'timeMax': endOfPeriod.toISOString(),
-                'singleEvents': true,
+function handleDisconnectClick() {
+    if (confirm("Disconnect from Google Cloud? This will clear local tokens and disable sync features.")) {
+        if (accessToken) {
+            google.accounts.oauth2.revokeToken(accessToken, () => {
+                console.log("Google Session Revoked.");
             });
-
-            const events = (response.result.items || []).map(event => ({
-                ...event,
-                personColor: person.color,
-                calendarId: person.id 
-            }));
-            allEvents = allEvents.concat(events);
         }
-        renderCalendarGrid(startOfWeek, allEvents);
-    } catch (err) {
-        console.error("Calendar Fetch Error:", err);
+        accessToken = null;
+        localStorage.removeItem('google_session_active');
+        updateSettingsUI(false);
+        
+        // If on calendar page, wipe grid area clean
+        const grid = document.getElementById('calendar-grid');
+        if (grid) grid.innerHTML = '<div class="blank-state-card"><i class="fas fa-lock placeholder-icon"></i><p>Sign in via Settings to view calendars.</p></div>';
     }
 }
 
-// Helper to safely parse any Google Calendar date field into absolute Local Time bounds
-function parseToLocalMidnight(dateField) {
-    if (!dateField) return 0;
-    if (dateField.dateTime) {
-        return new Date(dateField.dateTime).setHours(0, 0, 0, 0);
-    }
-    // All-day strings (YYYY-MM-DD) are parsed strictly as local numbers to prevent UTC shift bugs
-    const [year, month, day] = dateField.date.split('-').map(Number);
-    return new Date(year, month - 1, day, 0, 0, 0, 0).getTime();
-}
+function updateSettingsUI(isConnected) {
+    const statusBadge = document.getElementById('auth-status-badge');
+    const statusText = document.getElementById('status-text');
+    const authBtn = document.getElementById('auth_button');
+    const disconnectBtn = document.getElementById('disconnect_button');
 
-function renderCalendarGrid(startDate, allEvents) {
-    const grid = document.getElementById('calendar-grid');
-    grid.innerHTML = ''; 
-    
-    grid.onclick = (e) => {
-        const cell = e.target.closest('.day-cell');
-        if (cell && cell.dataset.date) {
-            openEventModal(null, cell.dataset.date);
-        }
-    };
+    // Only attempt updates if elements are found on current screen
+    if (!statusBadge) return;
 
-    let loopDate = new Date(startDate);
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    for (let i = 0; i < 42; i++) {
-        const dayCell = document.createElement('div');
-        dayCell.className = 'day-cell';
-        
-        const year = loopDate.getFullYear();
-        const month = String(loopDate.getMonth() + 1).padStart(2, '0');
-        const day = String(loopDate.getDate()).padStart(2, '0');
-        const cellDateString = `${year}-${month}-${day}`;
-        
-        dayCell.setAttribute('data-date', cellDateString);
-        dayCell.style.cursor = 'pointer';
-        
-        const compareTime = new Date(year, loopDate.getMonth(), loopDate.getDate(), 0, 0, 0, 0).getTime();
-
-        if (compareTime < today.getTime()) {
-            dayCell.classList.add('past-day');
-        } else if (compareTime === today.getTime()) {
-            dayCell.classList.add('today-day');
-        }
-
-        let weatherHTML = '';
-        if (weatherForecast) {
-            const wIdx = weatherForecast.time.indexOf(cellDateString);
-            if (wIdx !== -1) {
-                const max = Math.round(weatherForecast.temperature_2m_max[wIdx]);
-                const min = Math.round(weatherForecast.temperature_2m_min[wIdx]);
-                const code = weatherForecast.weather_code[wIdx];
-                weatherHTML = `
-                    <div class="cell-weather">
-                        <div class="cell-temp">${max}°<span>${min}°</span></div>
-                        <img src="${getWeatherIcon(code)}" alt="weather">
-                    </div>`;
-            }
-        }
-
-        const monthLabel = monthNames[loopDate.getMonth()];
-        dayCell.innerHTML = `
-            <div class="day-top-row">
-                <div class="day-num">${monthLabel} ${loopDate.getDate()}</div>
-                ${weatherHTML}
-            </div>
-        `;
-
-        // Filter: Use safe midnight helper to match the range correctly
-        const dailyEvents = allEvents.filter(e => {
-            const startMidnight = parseToLocalMidnight(e.start);
-            let endMidnight = parseToLocalMidnight(e.end);
-
-            // If it's an all-day event, Google sets the end date exclusively to the next day.
-            // We trim 1 millisecond off true multi-day events to stop them bleeding over visually.
-            if (e.end.date && (new Date(e.end.date) - new Date(e.start.date) > 86400000)) {
-                const [y, m, d] = e.end.date.split('-').map(Number);
-                endMidnight = new Date(new Date(y, m - 1, d, 0, 0, 0, 0).getTime() - 1).setHours(0,0,0,0);
-            } else if (e.end.date) {
-                // Single day all-day event needs to sit cleanly on its start date
-                endMidnight = startMidnight;
-            }
-
-            return compareTime >= startMidnight && compareTime <= endMidnight;
-        });
-
-        // Sorting: Multi-day events first (longest first), then single all-day, then timed events
-        dailyEvents.sort((a, b) => {
-            const aStart = parseToLocalMidnight(a.start);
-            const aEnd = parseToLocalMidnight(a.end);
-            const bStart = parseToLocalMidnight(b.start);
-            const bEnd = parseToLocalMidnight(b.end);
-
-            const aDuration = aEnd - aStart;
-            const bDuration = bEnd - bStart;
-
-            const aIsMultiDay = aDuration > 86400000;
-            const bIsMultiDay = bDuration > 86400000;
-
-            if (aIsMultiDay && !bIsMultiDay) return -1;
-            if (!aIsMultiDay && bIsMultiDay) return 1;
-            if (aIsMultiDay && bIsMultiDay) return bDuration - aDuration; 
-
-            const aIsAllDay = !a.start.dateTime;
-            const bIsAllDay = !b.start.dateTime;
-            if (aIsAllDay && !bIsAllDay) return -1;
-            if (!aIsAllDay && bIsAllDay) return 1;
-
-            const aTime = a.start.dateTime ? new Date(a.start.dateTime).getTime() : 0;
-            const bTime = b.start.dateTime ? new Date(b.start.dateTime).getTime() : 0;
-            return aTime - bTime;
-        });
-
-        dailyEvents.forEach(event => {
-            const eventDiv = document.createElement('div');
-            eventDiv.className = 'event';
-            eventDiv.style.backgroundColor = event.personColor;
-            
-            eventDiv.onclick = (e) => {
-                e.stopPropagation();
-                openEventModal(event);
-            };
-
-            let timeString = "";
-            if (event.start.dateTime) {
-                const eventStart = new Date(event.start.dateTime);
-                if (eventStart.getFullYear() === loopDate.getFullYear() &&
-                    eventStart.getMonth() === loopDate.getMonth() &&
-                    eventStart.getDate() === loopDate.getDate()) {
-                    timeString = eventStart.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + " ";
-                } else {
-                    timeString = "→ "; 
-                }
-            }
-
-            eventDiv.innerText = timeString + event.summary;
-            dayCell.appendChild(eventDiv);
-        });
-
-        grid.appendChild(dayCell);
-        loopDate.setDate(loopDate.getDate() + 1);
-    }
-}
-
-/* ==========================================
-   5. MODALS & COUNTDOWN ENGINE
-   ========================================== */
-function openCountdownModal() {
-    isCountdownMode = true;
-    const modal = document.getElementById('eventModal');
-    const deleteBtn = document.getElementById('deleteEventBtn');
-    const selectGroup = document.getElementById('calendar-select-group');
-    document.getElementById('modalTitle').innerText = "Set Wall Countdown";
-    selectGroup.classList.add('hidden');
-    document.getElementById('eventSummary').value = localStorage.getItem('wallCountdownName') || '';
-    document.getElementById('eventDate').value = localStorage.getItem('wallCountdownDate') || '';
-    document.getElementById('eventTime').value = localStorage.getItem('wallCountdownTime') || '';
-    deleteBtn.style.display = localStorage.getItem('wallCountdownName') ? "block" : "none";
-    deleteBtn.innerText = "Remove Countdown";
-    modal.style.display = "block";
-}
-
-function openEventModal(event = null, defaultDate = null) {
-    isCountdownMode = false;
-    const modal = document.getElementById('eventModal');
-    const select = document.getElementById('eventCalendar');
-    const selectGroup = document.getElementById('calendar-select-group');
-    const deleteBtn = document.getElementById('deleteEventBtn');
-    const title = document.getElementById('modalTitle');
-    selectGroup.classList.remove('hidden');
-    deleteBtn.innerText = "Delete";
-    select.innerHTML = FAMILY_CALENDARS.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
-    
-    if (event) {
-        currentEditEvent = event;
-        title.innerText = "Edit Event";
-        document.getElementById('eventSummary').value = event.summary;
-        select.value = event.calendarId;
-        
-        const start = new Date(event.start.dateTime || event.start.date);
-        const year = start.getFullYear();
-        const month = String(start.getMonth() + 1).padStart(2, '0');
-        const day = String(start.getDate()).padStart(2, '0');
-        document.getElementById('eventDate').value = `${year}-${month}-${day}`;
-        
-        document.getElementById('eventTime').value = event.start.dateTime ? start.toTimeString().slice(0, 5) : '';
-        deleteBtn.style.display = "block";
+    if (isConnected) {
+        statusBadge.className = "status-badge connected";
+        statusText.innerText = "Connected";
+        authBtn.innerText = "Re-authenticate";
+        if (disconnectBtn) disconnectBtn.classList.remove('hidden');
     } else {
-        currentEditEvent = null;
-        title.innerText = "Add Family Event";
-        document.getElementById('eventSummary').value = '';
-        
-        if (defaultDate) {
-            document.getElementById('eventDate').value = defaultDate;
-        } else {
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const day = String(today.getDate()).padStart(2, '0');
-            document.getElementById('eventDate').value = `${year}-${month}-${day}`;
-        }
-        
-        document.getElementById('eventTime').value = '';
-        deleteBtn.style.display = "none";
-    }
-    modal.style.display = "block";
-}
-
-function closeEventModal() { document.getElementById('eventModal').style.display = "none"; }
-
-async function submitEvent() {
-    const summary = document.getElementById('eventSummary').value;
-    const date = document.getElementById('eventDate').value;
-    const time = document.getElementById('eventTime').value;
-    if (!summary || !date) { alert("Please enter a name and date."); return; }
-    if (isCountdownMode) {
-        localStorage.setItem('wallCountdownName', summary);
-        localStorage.setItem('wallCountdownDate', date);
-        localStorage.setItem('wallCountdownTime', time);
-        initCountdown();
-        closeEventModal();
-    } else {
-        const calendarId = document.getElementById('eventCalendar').value;
-        let startObj = time ? { 'dateTime': `${date}T${time}:00+08:00` } : { 'date': date };
-        
-        // For all-day events, Google expects the end date to be the next day (exclusive boundary)
-        let endObj;
-        if (time) {
-            endObj = { 'dateTime': `${date}T${addOneHour(time)}:00+08:00` };
-        } else {
-            const [y, m, d] = date.split('-').map(Number);
-            const nextDay = new Date(y, m - 1, d + 1);
-            const ny = nextDay.getFullYear();
-            const nm = String(nextDay.getMonth() + 1).padStart(2, '0');
-            const nd = String(nextDay.getDate()).padStart(2, '0');
-            endObj = { 'date': `${ny}-${nm}-${nd}` };
-        }
-
-        try {
-            const resource = { 'summary': summary, 'start': startObj, 'end': endObj };
-            if (currentEditEvent) {
-                await gapi.client.calendar.events.update({ 'calendarId': currentEditEvent.calendarId, 'eventId': currentEditEvent.id, 'resource': resource });
-            } else {
-                await gapi.client.calendar.events.insert({ 'calendarId': calendarId, 'resource': resource });
-            }
-            closeEventModal();
-            fetchCalendarEvents();
-        } catch (err) { console.error("Calendar Save Error:", err); }
+        statusBadge.className = "status-badge disconnected";
+        statusText.innerText = "Disconnected";
+        authBtn.innerText = "Sign In with Google";
+        if (disconnectBtn) disconnectBtn.classList.add('hidden');
     }
 }
 
-async function deleteEvent() {
-    if (isCountdownMode) {
-        if (confirm("Remove the countdown timer?")) {
-            localStorage.removeItem('wallCountdownName');
-            localStorage.removeItem('wallCountdownDate');
-            localStorage.removeItem('wallCountdownTime');
-            initCountdown();
-            closeEventModal();
-        }
-    } else {
-        if (!currentEditEvent || !confirm("Delete this event?")) return;
-        try {
-            await gapi.client.calendar.events.delete({ 'calendarId': currentEditEvent.calendarId, 'eventId': currentEditEvent.id });
-            closeEventModal();
-            fetchCalendarEvents();
-        } catch (err) { console.error("Delete Error:", err); }
+// Modify your window.onload script entry wrapper in script.js to execute UI checks:
+const existingOnload = window.onload;
+window.onload = () => {
+    if (typeof existingOnload === 'function') existingOnload();
+    initCountdown();
+    // Run an immediate UI check for the settings state badge on page render
+    if (localStorage.getItem('google_session_active') === 'true') {
+        updateSettingsUI(true);
     }
-}
-
-function addOneHour(timeStr) {
-    let [h, m] = timeStr.split(':').map(Number);
-    return `${String((h + 1) % 24).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-}
-
-function initCountdown() {
-    const name = localStorage.getItem('wallCountdownName');
-    const date = localStorage.getItem('wallCountdownDate');
-    const time = localStorage.getItem('wallCountdownTime') || "00:00";
-    const widget = document.getElementById('countdown-widget');
-    const addBtn = document.getElementById('add-countdown-btn');
-    if (!name || !date) {
-        widget.classList.add('hidden');
-        addBtn.classList.remove('hidden');
-        if (countdownInterval) clearInterval(countdownInterval);
-        return;
-    }
-    widget.classList.remove('hidden');
-    addBtn.classList.add('hidden');
-    document.getElementById('widget-label').innerText = name;
-    if (countdownInterval) clearInterval(countdownInterval);
-    const target = new Date(`${date}T${time}:00+08:00`).getTime();
-    countdownInterval = setInterval(() => {
-        const now = new Date().getTime();
-        const distance = target - now;
-        if (distance < 0) {
-            clearInterval(countdownInterval);
-            document.getElementById('widget-timer').innerText = "LIVE!";
-            return;
-        }
-        const d = Math.floor(distance / (1000 * 60 * 60 * 24));
-        const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-        const s = Math.floor((distance % (1000 * 60)) / 1000);
-        document.getElementById('widget-timer').innerText = `${d}d ${h.toString().padStart(2,'0')}h ${m.toString().padStart(2,'0')}m ${s.toString().padStart(2,'0')}s`;
-    }, 1000);
-}
-
-window.onload = () => { 
-    gapiLoaded(); 
-    gisLoaded(); 
-    initCountdown(); 
 };
