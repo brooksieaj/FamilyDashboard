@@ -3,75 +3,219 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Family Wall Dashboard</title>
-    <link rel="stylesheet" href="./style.css">
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="https://apis.google.com/js/api.js" async defer></script>
+    <title>Family Board Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
-    <div class="dashboard-container">
-        <main class="calendar-section">
-            <header class="controls">
-                <h1>Our Family Calendar</h1>
-                
-                <div class="button-group">
-                    <div id="countdown-widget" onclick="openCountdownModal()" title="Click to edit countdown">
-                        <div id="widget-label">COUNTDOWN</div>
-                        <div id="widget-timer">00:00:00:00</div>
-                    </div>
+    <!-- Retractable Side Menu -->
+    <nav id="sidebar" class="sidebar collapsed">
+        <div class="sidebar-header">
+            <button id="sidebarToggle" class="icon-btn"><i class="fas fa-bars"></i></button>
+            <span class="sidebar-title">Family Hub</span>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="active">
+                <a href="index.html">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span class="menu-text">Calendar</span>
+                </a>
+            </li>
+            <li>
+                <a href="meals.html">
+                    <i class="fas fa-utensils"></i>
+                    <span class="menu-text">Meals</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
 
-                    <button id="add-countdown-btn" onclick="openCountdownModal()" style="background-color: #fc6a03; margin-right: 10px;">+ Add Countdown</button>
-                    <button onclick="openEventModal()" style="background-color: #0f9d58; margin-right: 10px;">+ Add Event</button>
-                    <button id="auth_button" onclick="handleAuthClick()">Connect Google Account</button>
+    <!-- Main Content Area Wrapper -->
+    <main class="main-content">
+        <section class="calendar-section">
+            <div class="controls">
+                <div class="header-left">
+                    <button id="contentMenuToggle" class="icon-btn hide-on-desktop"><i class="fas fa-bars"></i></button>
+                    <h1>Family Board</h1>
                 </div>
-            </header>
+                <div class="button-group">
+                    <div id="countdown-widget" class="hidden" onclick="openCountdownModal()">
+                        <div id="widget-label">Countdown</div>
+                        <div id="widget-timer">00d 00h 00m 00s</div>
+                    </div>
+                    <button id="add-countdown-btn" style="margin-right: 10px; background-color: #fc6a03;" onclick="openCountdownModal()">+ Countdown</button>
+                    <button id="auth_button" onclick="handleAuthClick()">Sign In / Sync</button>
+                </div>
+            </div>
 
             <div class="calendar-header">
-                <div>Mon</div>
-                <div>Tue</div>
-                <div>Wed</div>
-                <div>Thu</div>
-                <div>Fri</div>
-                <div>Sat</div>
-                <div>Sun</div>
+                <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
             </div>
             
-            <div id="calendar-grid" class="calendar-grid"></div>
-        </main>
-    </div>
+            <div id="calendar-grid" class="calendar-grid">
+                <!-- JS dynamically injects grid cells here -->
+            </div>
+        </section>
+    </main>
 
+    <!-- Event/Modal Overlay Structure -->
     <div id="eventModal" class="modal">
         <div class="modal-content">
             <h2 id="modalTitle">Add Family Event</h2>
             
-            <label for="eventSummary">Event Name</label>
-            <input type="text" id="eventSummary" placeholder="e.g. Soccer Practice" required>
+            <label for="eventSummary">Event Title / Name</label>
+            <input type="text" id="eventSummary" placeholder="e.g. Swimming Lessons">
             
             <div id="calendar-select-group">
-                <label for="eventCalendar">Who is this for?</label>
+                <label for="eventCalendar">Whose Calendar?</label>
                 <select id="eventCalendar"></select>
             </div>
-
+            
+            <label for="eventDate">Date</label>
+            <input type="date" id="eventDate">
+            
             <div class="time-input">
                 <div>
-                    <label>Date</label>
-                    <input type="date" id="eventDate">
-                </div>
-                <div>
-                    <label id="timeLabel">Time (Optional)</label>
+                    <label for="eventTime">Start Time (Optional)</label>
                     <input type="time" id="eventTime">
                 </div>
             </div>
-
+            
             <div class="modal-buttons">
-                <button id="deleteEventBtn" onclick="deleteEvent()" style="background-color: #db4437; margin-right: auto; display: none;">Delete</button>
-                <button onclick="closeEventModal()" style="background-color: #888;">Cancel</button>
-                <button id="submitEventBtn" onclick="submitEvent()" style="background-color: #4285f4;">Save Changes</button>
+                <button id="deleteEventBtn" onclick="deleteEvent()">Delete</button>
+                <button style="background-color: #aaa;" onclick="closeEventModal()">Cancel</button>
+                <button onclick="submitEvent()">Save</button>
             </div>
         </div>
     </div>
 
-    <script src="./script.js"></script>
+    <!-- Scripts -->
+    <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+    <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+    <script src="script.js"></script>
+    <script>
+        // Sidebar collapse control logic
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('sidebarToggle');
+        const contentToggleBtn = document.getElementById('contentMenuToggle');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('collapsed');
+        }
+
+        toggleBtn.addEventListener('click', toggleSidebar);
+        contentToggleBtn.addEventListener('click', toggleSidebar);
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Board Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- Retractable Side Menu -->
+    <nav id="sidebar" class="sidebar collapsed">
+        <div class="sidebar-header">
+            <button id="sidebarToggle" class="icon-btn"><i class="fas fa-bars"></i></button>
+            <span class="sidebar-title">Family Hub</span>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="active">
+                <a href="index.html">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span class="menu-text">Calendar</span>
+                </a>
+            </li>
+            <li>
+                <a href="meals.html">
+                    <i class="fas fa-utensils"></i>
+                    <span class="menu-text">Meals</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content Area Wrapper -->
+    <main class="main-content">
+        <section class="calendar-section">
+            <div class="controls">
+                <div class="header-left">
+                    <button id="contentMenuToggle" class="icon-btn hide-on-desktop"><i class="fas fa-bars"></i></button>
+                    <h1>Family Board</h1>
+                </div>
+                <div class="button-group">
+                    <div id="countdown-widget" class="hidden" onclick="openCountdownModal()">
+                        <div id="widget-label">Countdown</div>
+                        <div id="widget-timer">00d 00h 00m 00s</div>
+                    </div>
+                    <button id="add-countdown-btn" style="margin-right: 10px; background-color: #fc6a03;" onclick="openCountdownModal()">+ Countdown</button>
+                    <button id="auth_button" onclick="handleAuthClick()">Sign In / Sync</button>
+                </div>
+            </div>
+
+            <div class="calendar-header">
+                <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
+            </div>
+            
+            <div id="calendar-grid" class="calendar-grid">
+                <!-- JS dynamically injects grid cells here -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Event/Modal Overlay Structure -->
+    <div id="eventModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Add Family Event</h2>
+            
+            <label for="eventSummary">Event Title / Name</label>
+            <input type="text" id="eventSummary" placeholder="e.g. Swimming Lessons">
+            
+            <div id="calendar-select-group">
+                <label for="eventCalendar">Whose Calendar?</label>
+                <sselect id="eventCalendar"></select>
+            </div>
+            
+            <label for="eventDate">Date</label>
+            <input type="date" id="eventDate">
+            
+            <div class="time-input">
+                <div>
+                    <label for="eventTime">Start Time (Optional)</label>
+                    <input type="time" id="eventTime">
+                </div>
+            </div>
+            
+            <div class="modal-buttons">
+                <button id="deleteEventBtn" onclick="deleteEvent()">Delete</button>
+                <button style="background-color: #aaa;" onclick="closeEventModal()">Cancel</button>
+                <button onclick="submitEvent()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+    <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+    <script src="script.js"></script>
+    <script>
+        // Sidebar collapse control logic
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('sidebarToggle');
+        const contentToggleBtn = document.getElementById('contentMenuToggle');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('collapsed');
+        }
+
+        toggleBtn.addEventListener('click', toggleSidebar);
+        contentToggleBtn.addEventListener('click', toggleSidebar);
+    </script>
 </body>
 </html>

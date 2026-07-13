@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Board - Meals</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- FontAwesome for matching dashboard icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- Retractable Side Menu -->
+    <nav id="sidebar" class="sidebar collapsed">
+        <div class="sidebar-header">
+            <button id="sidebarToggle" class="icon-btn"><i class="fas fa-bars"></i></button>
+            <span class="sidebar-title">Family Hub</span>
+        </div>
+        <ul class="sidebar-menu">
+            <li>
+                <a href="index.html">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span class="menu-text">Calendar</span>
+                </a>
+            </li>
+            <li class="active">
+                <a href="meals.html">
+                    <i class="fas fa-utensils"></i>
+                    <span class="menu-text">Meals</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <header class="controls">
+            <div class="header-left">
+                <button id="contentMenuToggle" class="icon-btn hide-on-desktop"><i class="fas fa-bars"></i></button>
+                <h1>Family Meal Planner</h1>
+            </div>
+        </header>
+        
+        <div class="blank-state-card">
+            <i class="fas fa-pie-chart placeholder-icon"></i>
+            <p>Meal Planning screen coming soon...</p>
+        </div>
+    </main>
+
+    <script>
+        // Simple toggle logic for the meals page
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('sidebarToggle');
+        const contentToggleBtn = document.getElementById('contentMenuToggle');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('collapsed');
+        }
+
+        toggleBtn.addEventListener('click', toggleSidebar);
+        contentToggleBtn.addEventListener('click', toggleSidebar);
+    </script>
+</body>
+</html>

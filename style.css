@@ -212,3 +212,179 @@ button:hover { background-color: #357ae8; }
 .modal-buttons button { padding: 12px 24px; font-size: 1.15rem; }
 #deleteEventBtn { background-color: #db4437; margin-right: auto; }
 #deleteEventBtn:hover { background-color: #c53929; }
+
+/* ==========================================
+   6. DASHBOARD STRUCTURAL LAYOUT WITH SIDEBAR
+   ========================================== */
+body {
+    display: flex;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Master Sidebar Container */
+.sidebar {
+    width: 260px;
+    background-color: #ffffff;
+    border-right: 1px solid #e0e2e6;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+    z-index: 1000;
+}
+
+/* Collapsed state modifier */
+.sidebar.collapsed {
+    width: 68px;
+}
+
+.sidebar-header {
+    height: 70px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    border-bottom: 1px solid #f0f2f5;
+    gap: 16px;
+    overflow: hidden;
+}
+
+.sidebar-title {
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: #333;
+    white-space: nowrap;
+    opacity: 1;
+    transition: opacity 0.2s ease;
+}
+
+.sidebar.collapsed .sidebar-title {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* General Purpose Icon Button Styling */
+.icon-btn {
+    background: none;
+    border: none;
+    color: #5f6368;
+    padding: 10px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    min-width: 40px;
+    height: 40px;
+    transition: background 0.2s;
+}
+.icon-btn:hover {
+    background-color: #f1f3f4;
+    color: #1a73e8;
+}
+
+/* Navigation List Options */
+.sidebar-menu {
+    list-style: none;
+    padding: 12px 8px;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.sidebar-menu li a {
+    display: flex;
+    align-items: center;
+    padding: 12px 14px;
+    color: #5f6368;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    gap: 20px;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.sidebar-menu li i {
+    font-size: 1.25rem;
+    width: 24px;
+    text-align: center;
+}
+
+.sidebar-menu li a:hover {
+    background-color: #f1f3f4;
+    color: #202124;
+}
+
+/* Active Page Highlight states */
+.sidebar-menu li.active a {
+    background-color: #e8f0fe;
+    color: #1a73e8;
+}
+
+/* Hides label text when collapsed */
+.menu-text {
+    opacity: 1;
+    transition: opacity 0.2s ease;
+}
+.sidebar.collapsed .menu-text {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Main Content Workspace Panes */
+.main-content {
+    flex-grow: 1;
+    background-color: #f0f2f5;
+    min-width: 0; 
+    display: flex;
+    flex-direction: column;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.hide-on-desktop {
+    display: none;
+}
+
+/* Content View Styles for blank state subpages */
+.blank-state-card {
+    margin: 40px auto;
+    background: white;
+    padding: 60px;
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid #e0e2e6;
+    max-width: 500px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.placeholder-icon {
+    font-size: 4rem;
+    color: #d1d5db;
+    margin-bottom: 20px;
+    display: block;
+}
+
+.blank-state-card p {
+    color: #6b7280;
+    font-size: 1.2rem;
+    margin: 0;
+}
+
+/* Responsive UI Adjustment overrides */
+@media (max-width: 768px) {
+    .hide-on-desktop {
+        display: flex;
+    }
+    .sidebar.collapsed {
+        width: 0px;
+        border-right: none;
+    }
+}
