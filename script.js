@@ -1,5 +1,5 @@
 /* ==========================================
-   1. CONFIGURATION & IDENTITY
+   1. CONFIGURATION & GLOBAL IDENTITY
    ========================================== */
 const CLIENT_ID = '145116633029-6ujgciuv8f3c9901c8uaorr6qopsaa4v.apps.googleusercontent.com';
 const SCOPES = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/tasks';
@@ -15,14 +15,29 @@ const FAMILY_CALENDARS = [
 ];
 
 let tokenClient;
-let accessToken = null;
 let currentEditEvent = null; 
 let isCountdownMode = false; 
 let countdownInterval = null; 
 let weatherForecast = null; 
 
+// Secure token persistence getter
+function getValidAccessToken() {
+    const token = localStorage.getItem('google_access_token');
+    const expiry = localStorage.getItem('google_token_expiry');
+    
+    if (!token || !expiry) return null;
+    
+    // Check if token has expired (with a 2-minute buffer)
+    if (Date.now() > parseInt(expiry) - 120000) {
+        localStorage.removeItem('google_access_token');
+        localStorage.removeItem('google_token_expiry');
+        return null;
+    }
+    return token;
+}
+
 /* ==========================================
-   2. GOOGLE API LOADING WITH AUTO-RESTORE
+   2. GOOGLE API LOADING & CORE LIFECYCLE
    ========================================== */
 function gapiLoaded() {
     gapi.load('client', async () => {
@@ -31,9 +46,21 @@ function gapiLoaded() {
         await gapi.client.load('tasks', 'v1');
         console.log("Google Libraries Loaded");
         
-        // If calendar-grid exists on this page, look for data immediately if authorized
-        if (accessToken && document.getElementById('calendar-grid')) {
-            fetchWeatherData();
+        // Grab token straight from cache if it exists to unlock instant load
+        const activeToken = getValidAccessToken();
+        if (activeToken) {
+            gapi.client.setToken({ access_token: activeToken });
+            if (document.getElementById('calendar-grid')) {
+                fetchWeatherData(); // Triggers chain: weather -> fetch events -> render
+            }
+        } else if (localStorage.getItem('google_session_active') === 'true' && tokenClient) {
+            tokenClient.requestAccessToken({ prompt: '' });
+        } else {
+            // No credentials found; render a clean placeholder state on the calendar grid
+            const grid = document.getElementById('calendar-grid');
+            if (grid) {
+                grid.innerHTML = '<div class="blank-state-card" style="grid-column: 1/-1; text-align: center; padding: 40px; color: #777;"><i class="fas fa-lock" style="font-size: 2.5rem; margin-bottom: 15px; color: #ccc;"></i><p>Sign in via Settings to view your Family Calendars.</p></div>';
+            }
         }
     });
 }
@@ -45,46 +72,50 @@ function gisLoaded() {
         callback: (tokenResponse) => {
             if (tokenResponse.error !== undefined) throw (tokenResponse);
             
-            accessToken = tokenResponse.access_token;
+            const expiryTime = Date.now() + (parseInt(tokenResponse.expires_in) * 1000);
+            localStorage.setItem('google_access_token', tokenResponse.access_token);
+            localStorage.setItem('google_token_expiry', expiryTime.toString());
             localStorage.setItem('google_session_active', 'true');
             
-            // Sync UI elements on Settings Page
+            gapi.client.setToken({ access_token: tokenResponse.access_token });
             updateSettingsUI(true);
 
-            // Execute core routines for Calendar page if present
             if (document.getElementById('calendar-grid')) {
                 fetchWeatherData();
             }
         },
     });
 
-    // AUTO-LOGIN RESCUE FOR PAGE REFRESHES:
-    // If the flag is set, request a token silently without standard prompt interruptions
-    if (localStorage.getItem('google_session_active') === 'true') {
-        console.log("Restoring Google token session in background...");
+    if (!getValidAccessToken() && localStorage.getItem('google_session_active') === 'true') {
+        console.log("Cached token missing/expired. Requesting background refresh...");
         tokenClient.requestAccessToken({ prompt: '' });
     }
 }
 
 function handleAuthClick() {
-    // If user interacts directly, prompt consent just to ensure fresh scopes
     tokenClient.requestAccessToken({ prompt: 'consent' });
 }
 
 function handleDisconnectClick() {
     if (confirm("Disconnect from Google Cloud? This will clear local tokens and disable sync features.")) {
-        if (accessToken) {
-            google.accounts.oauth2.revokeToken(accessToken, () => {
+        const token = localStorage.getItem('google_access_token');
+        if (token) {
+            google.accounts.oauth2.revokeToken(token, () => {
                 console.log("Google Session Revoked.");
             });
         }
-        accessToken = null;
+        
+        localStorage.removeItem('google_access_token');
+        localStorage.removeItem('google_token_expiry');
         localStorage.removeItem('google_session_active');
+        gapi.client.setToken(null);
+        
         updateSettingsUI(false);
         
-        // If on calendar page, wipe grid area clean
         const grid = document.getElementById('calendar-grid');
-        if (grid) grid.innerHTML = '<div class="blank-state-card"><i class="fas fa-lock placeholder-icon"></i><p>Sign in via Settings to view calendars.</p></div>';
+        if (grid) {
+            grid.innerHTML = '<div class="blank-state-card" style="grid-column: 1/-1; text-align: center; padding: 40px; color: #777;"><i class="fas fa-lock" style="font-size: 2.5rem; margin-bottom: 15px; color: #ccc;"></i><p>Sign in via Settings to view your Family Calendars.</p></div>';
+        }
     }
 }
 
@@ -94,13 +125,12 @@ function updateSettingsUI(isConnected) {
     const authBtn = document.getElementById('auth_button');
     const disconnectBtn = document.getElementById('disconnect_button');
 
-    // Only attempt updates if elements are found on current screen
     if (!statusBadge) return;
 
     if (isConnected) {
         statusBadge.className = "status-badge connected";
         statusText.innerText = "Connected";
-        authBtn.innerText = "Re-authenticate";
+        authBtn.innerText = "Re-authenticate Account";
         if (disconnectBtn) disconnectBtn.classList.remove('hidden');
     } else {
         statusBadge.className = "status-badge disconnected";
@@ -110,13 +140,424 @@ function updateSettingsUI(isConnected) {
     }
 }
 
-// Modify your window.onload script entry wrapper in script.js to execute UI checks:
+/* ==========================================
+   3. WEATHER SYNC DATA PIPE
+   ========================================== */
+function fetchWeatherData() {
+    // Hardcoded to Safety Bay/Rockingham area constraints
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=-32.3044&longitude=115.7119&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Australia%2FPerth')
+        .then(response => response.json())
+        .then(data => {
+            weatherForecast = {};
+            for(let i=0; i<data.daily.time.length; i++) {
+                weatherForecast[data.daily.time[i]] = {
+                    maxTemp: Math.round(data.daily.temperature_2m_max[i]),
+                    minTemp: Math.round(data.daily.temperature_2m_min[i]),
+                    code: data.daily.weathercode[i]
+                };
+            }
+            fetchCalendarEvents();
+        })
+        .catch(err => {
+            console.error("Weather data pipeline error:", err);
+            fetchCalendarEvents(); // Fallback to list rendering gracefully
+        });
+}
+
+function getWeatherIcon(code) {
+    if (code === 0) return '☀️';
+    if ([1, 2, 3].includes(code)) return '⛅';
+    if ([45, 48].includes(code)) return '🌫️';
+    if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) return '🌧️';
+    if ([71, 73, 75, 77, 85, 86].includes(code)) return '❄️';
+    if ([95, 96, 99].includes(code)) return '⛈️';
+    return '✨';
+}
+
+/* ==========================================
+   4. DATA INGESTION (GOOGLE CALENDAR API)
+   ========================================== */
+function fetchCalendarEvents() {
+    const startOfWeek = getMonday(new Date());
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 7);
+
+    const timeMin = startOfWeek.toISOString();
+    const timeMax = endOfWeek.toISOString();
+
+    const promises = FAMILY_CALENDARS.map(cal => {
+        return gapi.client.calendar.events.list({
+            'calendarId': cal.id,
+            'timeMin': timeMin,
+            'timeMax': timeMax,
+            'singleEvents': true,
+            'orderBy': 'startTime'
+        }).then(response => {
+            return response.result.items.map(event => ({
+                ...event,
+                calendarName: cal.name,
+                calendarColor: cal.color,
+                calendarId: cal.id
+            }));
+        }).catch(err => {
+            console.warn(`Failed parsing pipeline array on calendar: ${cal.name}`, err);
+            return [];
+        });
+    });
+
+    Promise.all(promises).then(results => {
+        const allEvents = results.flat();
+        renderCalendarGrid(allEvents);
+    });
+}
+
+/* ==========================================
+   5. UI GENERATION & CALENDAR GRID
+   ========================================== */
+function getMonday(d) {
+    d = new Date(d);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); 
+    return new Date(d.setDate(diff));
+}
+
+function formatDateString(date) {
+    return date.getFullYear() + '-' + 
+           String(date.getMonth() + 1).padStart(2, '0') + '-' + 
+           String(date.getDate()).padStart(2, '0');
+}
+
+function renderCalendarGrid(events) {
+    const grid = document.getElementById('calendar-grid');
+    if (!grid) return; 
+    grid.innerHTML = '';
+
+    const monday = getMonday(new Date());
+
+    for (let i = 0; i < 7; i++) {
+        const currentDay = new Date(monday);
+        currentDay.setDate(monday.getDate() + i);
+        const dateString = formatDateString(currentDay);
+
+        const cell = document.createElement('div');
+        cell.className = 'calendar-day';
+        
+        // Match system date to mark current day layout borders
+        const todayStr = formatDateString(new Date());
+        if (dateString === todayStr) {
+            cell.classList.add('today-highlight');
+        }
+
+        // Heading Structure
+        const dayHeader = document.createElement('div');
+        dayHeader.className = 'day-header';
+        
+        const dateLabel = document.createElement('span');
+        dateLabel.className = 'date-label';
+        dateLabel.innerText = currentDay.getDate();
+        dayHeader.appendChild(dateLabel);
+
+        // Inject weather objects directly into day headings
+        if (weatherForecast && weatherForecast[dateString]) {
+            const w = weatherForecast[dateString];
+            const weatherLabel = document.createElement('span');
+            weatherLabel.className = 'day-weather';
+            weatherLabel.innerHTML = `${getWeatherIcon(w.code)} <small>${w.maxTemp}° / ${w.minTemp}°</small>`;
+            dayHeader.appendChild(weatherLabel);
+        }
+
+        cell.appendChild(dayHeader);
+
+        // Day Events Row Wrapper Container
+        const eventsContainer = document.createElement('div');
+        eventsContainer.className = 'events-container';
+
+        // Filter events belonging specifically to this row card
+        const dayEvents = events.filter(e => {
+            const startStr = e.start.date || e.start.dateTime.substring(0, 10);
+            return startStr === dateString;
+        });
+
+        // Dynamic sorting: All-day events sort to the top, then chronological timeline sort
+        dayEvents.sort((a, b) => {
+            if (a.start.date && !b.start.date) return -1;
+            if (!a.start.date && b.start.date) return 1;
+            if (a.start.dateTime && b.start.dateTime) {
+                return a.start.dateTime.localeCompare(b.start.dateTime);
+            }
+            return 0;
+        });
+
+        dayEvents.forEach(event => {
+            const evEl = document.createElement('div');
+            evEl.className = 'event-card';
+            evEl.style.borderLeftColor = event.calendarColor;
+
+            // Handle timing displays cleanly
+            let timeStr = "All Day";
+            if (event.start.dateTime) {
+                const d = new Date(event.start.dateTime);
+                timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+            }
+
+            evEl.innerHTML = `
+                <div class="event-meta">
+                    <span class="event-time">${timeStr}</span>
+                    <span class="event-owner" style="color: ${event.calendarColor}">${event.calendarName}</span>
+                </div>
+                <div class="event-summary">${event.summary}</div>
+            `;
+            
+            evEl.onclick = (e) => {
+                e.stopPropagation(); 
+                openEventModal(event);
+            };
+
+            eventsContainer.appendChild(evEl);
+        });
+
+        cell.appendChild(eventsContainer);
+        grid.appendChild(cell);
+    }
+}
+
+/* ==========================================
+   6. INTERACTIVE ACTIONS & MODALS
+   ========================================== */
+function openEventModal(event = null) {
+    // Abort if not authenticated
+    if (!getValidAccessToken()) {
+        alert("Action Locked: Please sign in via System Settings first.");
+        return;
+    }
+
+    currentEditEvent = event;
+    const modal = document.getElementById('eventModal');
+    const select = document.getElementById('eventCalendar');
+    
+    select.innerHTML = '';
+    FAMILY_CALENDARS.forEach(cal => {
+        const opt = document.createElement('option');
+        opt.value = cal.id;
+        opt.innerText = cal.name;
+        select.appendChild(opt);
+    });
+
+    if (event) {
+        document.getElementById('modalTitle').innerText = "Edit Family Event";
+        document.getElementById('eventSummary').value = event.summary;
+        document.getElementById('eventCalendar').value = event.calendarId;
+        document.getElementById('calendar-select-group').style.display = 'none'; 
+        document.getElementById('deleteEventBtn').style.display = 'inline-block';
+
+        if (event.start.date) {
+            document.getElementById('eventDate').value = event.start.date;
+            document.getElementById('eventTime').value = '';
+        } else {
+            const d = new Date(event.start.dateTime);
+            document.getElementById('eventDate').value = formatDateString(d);
+            document.getElementById('eventTime').value = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+        }
+    } else {
+        document.getElementById('modalTitle').innerText = "Add Family Event";
+        document.getElementById('eventSummary').value = '';
+        document.getElementById('eventCalendar').value = 'primary';
+        document.getElementById('calendar-select-group').style.display = 'block';
+        document.getElementById('eventDate').value = formatDateString(new Date());
+        document.getElementById('eventTime').value = '12:00';
+        document.getElementById('deleteEventBtn').style.display = 'none';
+    }
+    modal.style.display = 'block';
+}
+
+function closeEventModal() {
+    document.getElementById('eventModal').style.display = 'none';
+    currentEditEvent = null;
+}
+
+function submitEvent() {
+    const summary = document.getElementById('eventSummary').value;
+    const calendarId = document.getElementById('eventCalendar').value;
+    const date = document.getElementById('eventDate').value;
+    const time = document.getElementById('eventTime').value;
+
+    if (!summary) return alert("Please specify an event title name.");
+
+    let start = {}, end = {};
+    if (!time) {
+        start.date = date;
+        end.date = date;
+    } else {
+        const startIso = `${date}T${time}:00`;
+        start.dateTime = startIso;
+        start.timeZone = 'Australia/Perth';
+        
+        const endDateObj = new Date(`${date}T${time}:00`);
+        endDateObj.setHours(endDateObj.getHours() + 1); // Default to a clean 1-hour window block
+        
+        const endStr = endDateObj.getFullYear() + '-' + 
+            String(endDateObj.getMonth() + 1).padStart(2, '0') + '-' + 
+            String(endDateObj.getDate()).padStart(2, '0');
+        const endTimeStr = String(endDateObj.getHours()).padStart(2, '0') + ':' + String(endDateObj.getMinutes()).padStart(2, '0');
+        
+        end.dateTime = `${endStr}T${endTimeStr}:00`;
+        end.timeZone = 'Australia/Perth';
+    }
+
+    const resource = { summary, start, end };
+
+    if (currentEditEvent) {
+        gapi.client.calendar.events.update({
+            calendarId: currentEditEvent.calendarId,
+            eventId: currentEditEvent.id,
+            resource: resource
+        }).then(() => {
+            closeEventModal();
+            fetchCalendarEvents();
+        });
+    } else {
+        gapi.client.calendar.events.insert({
+            calendarId: calendarId,
+            resource: resource
+        }).then(() => {
+            closeEventModal();
+            fetchCalendarEvents();
+        });
+    }
+}
+
+function deleteEvent() {
+    if (currentEditEvent && confirm("Permanently drop this event entry from the master timeline?")) {
+        gapi.client.calendar.events.delete({
+            calendarId: currentEditEvent.calendarId,
+            eventId: currentEditEvent.id
+        }).then(() => {
+            closeEventModal();
+            fetchCalendarEvents();
+        });
+    }
+}
+
+/* ==========================================
+   7. SPECIAL AD-HOC APPS: COUNTDOWN ENGINE
+   ========================================== */
+function initCountdown() {
+    const target = localStorage.getItem('countdown_target_datetime');
+    const label = localStorage.getItem('countdown_target_label');
+    const widget = document.getElementById('countdown-widget');
+    const addBtn = document.getElementById('add-countdown-btn');
+
+    if (target && widget) {
+        if (addBtn) addBtn.style.display = 'none';
+        widget.classList.remove('hidden');
+        document.getElementById('widget-label').innerText = label || "Countdown Event";
+        
+        if (countdownInterval) clearInterval(countdownInterval);
+        
+        const targetDate = new Date(target).getTime();
+        
+        function updateTimer() {
+            const now = Date.now();
+            const distance = targetDate - now;
+            
+            if (distance < 0) {
+                document.getElementById('widget-timer').innerText = "00d 00h 00m 00s";
+                document.getElementById('widget-timer').style.color = "#db4437";
+                clearInterval(countdownInterval);
+                return;
+            }
+            
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            
+            document.getElementById('widget-timer').innerText = 
+                `${String(days).padStart(2,'0')}d ${String(hours).padStart(2,'0')}h ${String(minutes).padStart(2,'0')}m ${String(seconds).padStart(2,'0')}s`;
+        }
+        
+        updateTimer();
+        countdownInterval = setInterval(updateTimer, 1000);
+    } else {
+        if (widget) widget.classList.add('hidden');
+        if (addBtn) addBtn.style.display = 'inline-block';
+    }
+}
+
+function openCountdownModal() {
+    const target = localStorage.getItem('countdown_target_datetime');
+    const label = localStorage.getItem('countdown_target_label');
+    
+    // Create element structures dynamically on demand
+    let modal = document.getElementById('countdownModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'countdownModal';
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h2>Configure Event Countdown</h2>
+                <label for="countLabel">Event Title:</label>
+                <input type="text" id="countLabel" placeholder="e.g., Family Vacation!">
+                <label for="countDate">Target Date:</label>
+                <input type="date" id="countDate">
+                <label for="countTime">Target Time:</label>
+                <input type="time" id="countTime" value="00:00">
+                <div class="modal-buttons" style="margin-top:20px;">
+                    <button id="clearCountdownBtn" style="background-color:#db4437;">Delete</button>
+                    <button style="background-color:#aaa;" onclick="document.getElementById('countdownModal').style.display='none'">Cancel</button>
+                    <button id="saveCountdownBtn">Save Widget</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        document.getElementById('clearCountdownBtn').onclick = () => {
+            localStorage.removeItem('countdown_target_datetime');
+            localStorage.removeItem('countdown_target_label');
+            if (countdownInterval) clearInterval(countdownInterval);
+            modal.style.display = 'none';
+            initCountdown();
+        };
+        
+        document.getElementById('saveCountdownBtn').onclick = () => {
+            const lbl = document.getElementById('countLabel').value || "Countdown Event";
+            const dt = document.getElementById('countDate').value;
+            const tm = document.getElementById('countTime').value || "00:00";
+            if (!dt) return alert("Please supply a valid future target calendar date.");
+            
+            localStorage.setItem('countdown_target_datetime', `${dt}T${tm}`);
+            localStorage.setItem('countdown_target_label', lbl);
+            modal.style.display = 'none';
+            initCountdown();
+        };
+    }
+    
+    if (target) {
+        const parts = target.split('T');
+        document.getElementById('countLabel').value = label || '';
+        document.getElementById('countDate').value = parts[0];
+        document.getElementById('countTime').value = parts[1] || '00:00';
+    } else {
+        document.getElementById('countLabel').value = '';
+        document.getElementById('countDate').value = formatDateString(new Date());
+    }
+    
+    modal.style.display = 'block';
+}
+
+/* ==========================================
+   8. CORE ONLOAD RUNTIME SETUP
+   ========================================== */
 const existingOnload = window.onload;
 window.onload = () => {
     if (typeof existingOnload === 'function') existingOnload();
     initCountdown();
-    // Run an immediate UI check for the settings state badge on page render
-    if (localStorage.getItem('google_session_active') === 'true') {
+    
+    // Check if a valid, unexpired token exists or session is active to display UI correctly
+    if (getValidAccessToken() || localStorage.getItem('google_session_active') === 'true') {
         updateSettingsUI(true);
+    } else {
+        updateSettingsUI(false);
     }
 };
