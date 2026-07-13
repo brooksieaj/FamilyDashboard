@@ -12,11 +12,12 @@
         .meal-rows-container {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
             background-color: #ddd;
             border: 2px solid #333;
+            border-radius: 0 0 8px 8px; /* Matches bottom of calendar grid */
             flex-grow: 1;
-            padding: 6px;
+            padding: 4px;
             box-sizing: border-box;
         }
 
@@ -25,42 +26,50 @@
             display: flex;
             align-items: stretch;
             flex-grow: 1;
-            min-height: 80px;
             box-sizing: border-box;
         }
 
         .meal-day-label {
             font-weight: bold;
-            font-size: 1.6rem; /* Large text for readability */
+            font-size: 1.6rem; 
             color: white;
             background-color: #333;
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 180px; /* Fixed width ensures all text fields align perfectly */
+            width: 180px; 
             margin: 0;
             padding: 0 15px;
             text-align: center;
             flex-shrink: 0;
         }
 
-        .meal-input {
+        /* Input field container to handle clean vertical centering and alignment */
+        .meal-input-container {
             flex-grow: 1;
-            border: none;
-            padding: 15px 20px;
+            display: flex;
+            align-items: center; /* Vertically centers the text input container */
+            background-color: #fffdf5;
+            padding: 0 20px;
+        }
+
+        .meal-input {
+            width: 100%;
+            border: 1px dashed #ccc;
+            border-radius: 6px; /* Matches event rounded design */
+            padding: 12px 16px;
             font-family: inherit;
-            font-size: 1.4rem; /* Larger font size for the meal text entry */
+            font-size: 1.4rem; 
             font-weight: 600;
-            resize: none;
             outline: none;
             box-sizing: border-box;
-            background-color: #fffdf5;
+            background-color: #ffffff;
             transition: all 0.2s ease;
         }
 
         .meal-input:focus {
-            background-color: #ffffff;
-            box-shadow: inset 0 0 8px rgba(66, 133, 244, 0.2);
+            border: 2px solid #4285f4;
+            box-shadow: 0 0 8px rgba(66, 133, 244, 0.2);
         }
         
         .clear-btn {
@@ -71,6 +80,16 @@
         
         .clear-btn:hover {
             background-color: #c53929;
+        }
+
+        /* Unique Header matching the Calendar view rounding */
+        .meal-header-style {
+            background-color: #333;
+            height: 15px;
+            border-radius: 8px 8px 0 0;
+            margin-bottom: 0;
+            border: 2px solid #333;
+            border-bottom: none;
         }
     </style>
 </head>
@@ -110,42 +129,59 @@
             </div>
         </header>
         
+        <!-- Matching top frame border rounding wrapper -->
+        <div class="meal-header-style"></div>
+
         <!-- Horizontally Stacked Day Rows -->
         <div class="meal-rows-container">
             <!-- Monday -->
             <div class="meal-row-card">
                 <h3 class="meal-day-label">Monday</h3>
-                <textarea id="meal-monday" class="meal-input" placeholder="Tap to add dinner plan..."></textarea>
+                <div class="meal-input-container">
+                    <input type="text" id="meal-monday" class="meal-input" placeholder="Tap to add dinner plan...">
+                </div>
             </div>
             <!-- Tuesday -->
             <div class="meal-row-card">
                 <h3 class="meal-day-label">Tuesday</h3>
-                <textarea id="meal-tuesday" class="meal-input" placeholder="Tap to add dinner plan..."></textarea>
+                <div class="meal-input-container">
+                    <input type="text" id="meal-tuesday" class="meal-input" placeholder="Tap to add dinner plan...">
+                </div>
             </div>
             <!-- Wednesday -->
             <div class="meal-row-card">
                 <h3 class="meal-day-label">Wednesday</h3>
-                <textarea id="meal-wednesday" class="meal-input" placeholder="Tap to add dinner plan..."></textarea>
+                <div class="meal-input-container">
+                    <input type="text" id="meal-wednesday" class="meal-input" placeholder="Tap to add dinner plan...">
+                </div>
             </div>
             <!-- Thursday -->
             <div class="meal-row-card">
                 <h3 class="meal-day-label">Thursday</h3>
-                <textarea id="meal-thursday" class="meal-input" placeholder="Tap to add dinner plan..."></textarea>
+                <div class="meal-input-container">
+                    <input type="text" id="meal-thursday" class="meal-input" placeholder="Tap to add dinner plan...">
+                </div>
             </div>
             <!-- Friday -->
             <div class="meal-row-card">
                 <h3 class="meal-day-label">Friday</h3>
-                <textarea id="meal-friday" class="meal-input" placeholder="Tap to add dinner plan..."></textarea>
+                <div class="meal-input-container">
+                    <input type="text" id="meal-friday" class="meal-input" placeholder="Tap to add dinner plan...">
+                </div>
             </div>
             <!-- Saturday -->
             <div class="meal-row-card">
                 <h3 class="meal-day-label">Saturday</h3>
-                <textarea id="meal-saturday" class="meal-input" placeholder="Tap to add dinner plan..."></textarea>
+                <div class="meal-input-container">
+                    <input type="text" id="meal-saturday" class="meal-input" placeholder="Tap to add dinner plan...">
+                </div>
             </div>
             <!-- Sunday -->
             <div class="meal-row-card">
                 <h3 class="meal-day-label">Sunday</h3>
-                <textarea id="meal-sunday" class="meal-input" placeholder="Tap to add dinner plan..."></textarea>
+                <div class="meal-input-container">
+                    <input type="text" id="meal-sunday" class="meal-input" placeholder="Tap to add dinner plan...">
+                </div>
             </div>
         </div>
     </main>
@@ -168,16 +204,16 @@
 
         window.onload = () => {
             days.forEach(day => {
-                const textarea = document.getElementById(`meal-${day}`);
+                const inputField = document.getElementById(`meal-${day}`);
                 
                 // Load saved plan if it exists
                 const savedMeal = localStorage.getItem(`familyMeal_${day}`);
                 if (savedMeal) {
-                    textarea.value = savedMeal;
+                    inputField.value = savedMeal;
                 }
 
                 // Auto-save engine
-                textarea.addEventListener('input', (e) => {
+                inputField.addEventListener('input', (e) => {
                     localStorage.setItem(`familyMeal_${day}`, e.target.value);
                 });
             });
@@ -187,8 +223,8 @@
         function clearAllMeals() {
             if (confirm("Are you sure you want to clear the entire week's meal plan? This cannot be undone.")) {
                 days.forEach(day => {
-                    const textarea = document.getElementById(`meal-${day}`);
-                    textarea.value = '';
+                    const inputField = document.getElementById(`meal-${day}`);
+                    inputField.value = '';
                     localStorage.removeItem(`familyMeal_${day}`);
                 });
             }
