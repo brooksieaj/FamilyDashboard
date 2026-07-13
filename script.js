@@ -234,51 +234,57 @@ function renderCalendarGrid(events) {
 
     const monday = getMonday(new Date());
 
+    // Render exactly 7 days for the weekly row view matching your CSS grid columns
     for (let i = 0; i < 7; i++) {
         const currentDay = new Date(monday);
         currentDay.setDate(monday.getDate() + i);
         const dateString = formatDateString(currentDay);
 
+        // 1. Create the day cell container (Matches original CSS class: .day-cell)
         const cell = document.createElement('div');
-        cell.className = 'calendar-day';
+        cell.className = 'day-cell';
         
-        // Match system date to mark current day layout borders
         const todayStr = formatDateString(new Date());
         if (dateString === todayStr) {
-            cell.classList.add('today-highlight');
+            cell.classList.add('today-day'); // Matches original CSS class: .today-day
+        } else {
+            // Optional: check if day is in the past to apply .past-day if your logic needs it
+            const yesterday = new Date();
+            yesterday.setHours(0,0,0,0);
+            if (currentDay < yesterday) {
+                cell.classList.add('past-day'); // Matches original CSS class: .past-day
+            }
         }
 
-        // Heading Structure
-        const dayHeader = document.createElement('div');
-        dayHeader.className = 'day-header';
+        // 2. Build the top row header of the day cell (Matches original CSS class: .day-top-row)
+        const dayTopRow = document.createElement('div');
+        dayTopRow.className = 'day-top-row';
         
         const dateLabel = document.createElement('span');
-        dateLabel.className = 'date-label';
+        dateLabel.className = 'day-num'; // Matches original CSS class: .day-num
         dateLabel.innerText = currentDay.getDate();
-        dayHeader.appendChild(dateLabel);
+        dayTopRow.appendChild(dateLabel);
 
-        // Inject weather objects directly into day headings
+        // 3. Inject weather structures natively (Matches original CSS classes: .cell-weather, .cell-temp)
         if (weatherForecast && weatherForecast[dateString]) {
             const w = weatherForecast[dateString];
-            const weatherLabel = document.createElement('span');
-            weatherLabel.className = 'day-weather';
-            weatherLabel.innerHTML = `${getWeatherIcon(w.code)} <small>${w.maxTemp}° / ${w.minTemp}°</small>`;
-            dayHeader.appendChild(weatherLabel);
+            const weatherLabel = document.createElement('div');
+            weatherLabel.className = 'cell-weather';
+            weatherLabel.innerHTML = `
+                <span class="cell-temp">${w.maxTemp}°<span>/${w.minTemp}°</span></span>
+            `;
+            dayTopRow.appendChild(weatherLabel);
         }
 
-        cell.appendChild(dayHeader);
+        cell.appendChild(dayTopRow);
 
-        // Day Events Row Wrapper Container
-        const eventsContainer = document.createElement('div');
-        eventsContainer.className = 'events-container';
-
-        // Filter events belonging specifically to this day
+        // 4. Ingest and filter day specific events
         const dayEvents = events.filter(e => {
             const startStr = e.start.date || e.start.dateTime.substring(0, 10);
             return startStr === dateString;
         });
 
-        // Dynamic sorting: All-day events sort to the top, then chronological timeline sort
+        // Dynamic chronological sorting
         dayEvents.sort((a, b) => {
             if (a.start.date && !b.start.date) return -1;
             if (!a.start.date && b.start.date) return 1;
@@ -288,38 +294,31 @@ function renderCalendarGrid(events) {
             return 0;
         });
 
+        // 5. Render individual event blocks (Matches original CSS class: .event)
         dayEvents.forEach(event => {
             const evEl = document.createElement('div');
-            evEl.className = 'event-card';
+            evEl.className = 'event'; // Matches original CSS class: .event
             
-            // Apply the dynamic border edge color using the calendar configuration array color mapping
-            evEl.style.borderLeftColor = event.calendarColor;
+            // Apply background tint and solid boundary accents using the dynamic Google Calendar API values
+            evEl.style.backgroundColor = event.calendarColor;
 
-            // Handle timing displays cleanly
-            let timeStr = "All Day";
+            let timeStr = "";
             if (event.start.dateTime) {
                 const d = new Date(event.start.dateTime);
-                timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+                timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) + " ";
             }
 
-            // Standard un-stylized markup structure matching your original style.css selectors
-            evEl.innerHTML = `
-                <div class="event-meta">
-                    <span class="event-time">${timeStr}</span>
-                    <span class="event-owner" style="color: ${event.calendarColor}">${event.calendarName}</span>
-                </div>
-                <div class="event-summary">${event.summary}</div>
-            `;
+            // Text presentation mapping exactly to the single text layout line elements
+            evEl.innerText = `${timeStr}${event.summary}`;
             
             evEl.onclick = (e) => {
                 e.stopPropagation(); 
                 openEventModal(event);
             };
 
-            eventsContainer.appendChild(evEl);
+            cell.appendChild(evEl);
         });
 
-        cell.appendChild(eventsContainer);
         grid.appendChild(cell);
     }
 }
