@@ -15,7 +15,7 @@
             gap: 6px;
             background-color: #ddd;
             border: 2px solid #333;
-            border-radius: 0 0 8px 8px; /* Matches bottom of calendar grid */
+            border-radius: 8px; /* Smooth all-around corners */
             flex-grow: 1;
             padding: 4px;
             box-sizing: border-box;
@@ -27,6 +27,24 @@
             align-items: stretch;
             flex-grow: 1;
             box-sizing: border-box;
+        }
+
+        /* Round the top corners of the very first row element */
+        .meal-row-card:first-child {
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+        }
+        .meal-row-card:first-child .meal-day-label {
+            border-top-left-radius: 4px;
+        }
+
+        /* Round the bottom corners of the very last row element */
+        .meal-row-card:last-child {
+            border-bottom-left-radius: 4px;
+            border-bottom-right-radius: 4px;
+        }
+        .meal-row-card:last-child .meal-day-label {
+            border-bottom-left-radius: 4px;
         }
 
         .meal-day-label {
@@ -44,19 +62,19 @@
             flex-shrink: 0;
         }
 
-        /* Input field container to handle clean vertical centering and alignment */
+        /* Input field container using the signature grey app framework color */
         .meal-input-container {
             flex-grow: 1;
             display: flex;
-            align-items: center; /* Vertically centers the text input container */
-            background-color: #fffdf5;
+            align-items: center; 
+            background-color: #f0f2f5; /* Clean Grey Dashboard Background */
             padding: 0 20px;
         }
 
         .meal-input {
             width: 100%;
             border: 1px dashed #ccc;
-            border-radius: 6px; /* Matches event rounded design */
+            border-radius: 6px; 
             padding: 12px 16px;
             font-family: inherit;
             font-size: 1.4rem; 
@@ -80,16 +98,6 @@
         
         .clear-btn:hover {
             background-color: #c53929;
-        }
-
-        /* Unique Header matching the Calendar view rounding */
-        .meal-header-style {
-            background-color: #333;
-            height: 15px;
-            border-radius: 8px 8px 0 0;
-            margin-bottom: 0;
-            border: 2px solid #333;
-            border-bottom: none;
         }
     </style>
 </head>
@@ -128,9 +136,6 @@
                 <button class="clear-btn" onclick="clearAllMeals()"><i class="fas fa-trash-alt" style="margin-right: 8px;"></i>Clear All</button>
             </div>
         </header>
-        
-        <!-- Matching top frame border rounding wrapper -->
-        <div class="meal-header-style"></div>
 
         <!-- Horizontally Stacked Day Rows -->
         <div class="meal-rows-container">
