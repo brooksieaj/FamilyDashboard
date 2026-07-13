@@ -180,7 +180,7 @@ function getWeatherIcon(code) {
 function fetchCalendarEvents() {
     const startOfWeek = getMonday(new Date());
     const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 7);
+    endOfWeek.setDate(startOfWeek.getDate() + 42); // Fetch 42 days (6 weeks) to fill out the grid grid canvas
 
     const timeMin = startOfWeek.toISOString();
     const timeMax = endOfWeek.toISOString();
@@ -234,8 +234,8 @@ function renderCalendarGrid(events) {
 
     const monday = getMonday(new Date());
 
-    // Render exactly 7 days for the weekly row view matching your CSS grid columns
-    for (let i = 0; i < 7; i++) {
+    // Loop exactly 42 times to build a complete 6-week view grid (6 rows * 7 columns)
+    for (let i = 0; i < 42; i++) {
         const currentDay = new Date(monday);
         currentDay.setDate(monday.getDate() + i);
         const dateString = formatDateString(currentDay);
@@ -244,11 +244,11 @@ function renderCalendarGrid(events) {
         const cell = document.createElement('div');
         cell.className = 'day-cell';
         
+        // Match system date to mark current day layout borders
         const todayStr = formatDateString(new Date());
         if (dateString === todayStr) {
             cell.classList.add('today-day'); // Matches original CSS class: .today-day
         } else {
-            // Optional: check if day is in the past to apply .past-day if your logic needs it
             const yesterday = new Date();
             yesterday.setHours(0,0,0,0);
             if (currentDay < yesterday) {
@@ -284,7 +284,7 @@ function renderCalendarGrid(events) {
             return startStr === dateString;
         });
 
-        // Dynamic chronological sorting
+        // Dynamic sorting: All-day events sort to the top, then chronological timeline sort
         dayEvents.sort((a, b) => {
             if (a.start.date && !b.start.date) return -1;
             if (!a.start.date && b.start.date) return 1;
@@ -294,21 +294,21 @@ function renderCalendarGrid(events) {
             return 0;
         });
 
-        // 5. Render individual event blocks (Matches original CSS class: .event)
         dayEvents.forEach(event => {
             const evEl = document.createElement('div');
             evEl.className = 'event'; // Matches original CSS class: .event
             
-            // Apply background tint and solid boundary accents using the dynamic Google Calendar API values
+            // Apply background color to the card directly
             evEl.style.backgroundColor = event.calendarColor;
 
+            // Handle timing displays cleanly
             let timeStr = "";
             if (event.start.dateTime) {
                 const d = new Date(event.start.dateTime);
                 timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) + " ";
             }
 
-            // Text presentation mapping exactly to the single text layout line elements
+            // Standard un-stylized markup structure matching your original style.css selectors
             evEl.innerText = `${timeStr}${event.summary}`;
             
             evEl.onclick = (e) => {
