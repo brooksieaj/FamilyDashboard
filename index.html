@@ -40,12 +40,13 @@
                     <h1>Family Board</h1>
                 </div>
                 <div class="button-group">
+                    <button style="margin-right: 10px;" onclick="openEventModal()">+ Add Event</button>
                     <div id="countdown-widget" class="hidden" onclick="openCountdownModal()">
                         <div id="widget-label">Countdown</div>
                         <div id="widget-timer">00d 00h 00m 00s</div>
                     </div>
                     <button id="add-countdown-btn" style="margin-right: 10px; background-color: #fc6a03;" onclick="openCountdownModal()">+ Countdown</button>
-                    <button id="auth_button" onclick="handleAuthClick()">Sign In / Sync</button>
+                    <button id="auth_button" onclick="handleAuthClick()">Sign In</button>
                 </div>
             </div>
 
@@ -64,23 +65,19 @@
         <div class="modal-content">
             <h2 id="modalTitle">Add Family Event</h2>
             
-            <label for="eventSummary">Event Title / Name</label>
-            <input type="text" id="eventSummary" placeholder="e.g. Swimming Lessons">
+            <label for="eventSummary">Event Name:</label>
+            <input type="text" id="eventSummary">
             
             <div id="calendar-select-group">
-                <label for="eventCalendar">Whose Calendar?</label>
+                <label for="eventCalendar">Calendar:</label>
                 <select id="eventCalendar"></select>
             </div>
             
-            <label for="eventDate">Date</label>
+            <label for="eventDate">Date:</label>
             <input type="date" id="eventDate">
             
-            <div class="time-input">
-                <div>
-                    <label for="eventTime">Start Time (Optional)</label>
-                    <input type="time" id="eventTime">
-                </div>
-            </div>
+            <label for="eventTime">Time:</label>
+            <input type="time" id="eventTime">
             
             <div class="modal-buttons">
                 <button id="deleteEventBtn" onclick="deleteEvent()">Delete</button>
