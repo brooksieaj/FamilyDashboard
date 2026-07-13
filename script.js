@@ -291,7 +291,9 @@ function renderCalendarGrid(events) {
         dayEvents.forEach(event => {
             const evEl = document.createElement('div');
             evEl.className = 'event-card';
-            evEl.style.borderLeftColor = event.calendarColor;
+            // Set the background using a soft opacity of the calendar color, and a solid left border
+            evEl.style.backgroundColor = `${event.calendarColor}15`; 
+            evEl.style.borderLeft = `4px solid ${event.calendarColor}`;
 
             // Handle timing displays cleanly
             let timeStr = "All Day";
@@ -300,12 +302,13 @@ function renderCalendarGrid(events) {
                 timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
             }
 
+            // Styled layout with distinct visual hierarchy for time, owner, and summary
             evEl.innerHTML = `
-                <div class="event-meta">
-                    <span class="event-time">${timeStr}</span>
-                    <span class="event-owner" style="color: ${event.calendarColor}">${event.calendarName}</span>
+                <div class="event-meta" style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 4px; font-weight: 600;">
+                    <span class="event-time" style="color: #555;">${timeStr}</span>
+                    <span class="event-owner" style="color: ${event.calendarColor}; text-transform: uppercase; font-size: 0.7rem;">${event.calendarName}</span>
                 </div>
-                <div class="event-summary">${event.summary}</div>
+                <div class="event-summary" style="font-size: 0.85rem; color: #222; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${event.summary}</div>
             `;
             
             evEl.onclick = (e) => {
