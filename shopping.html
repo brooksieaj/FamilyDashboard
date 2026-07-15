@@ -4,37 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Family Dashboard - Shopping List</title>
-    <!-- FontAwesome for the checkmarks and delete icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
 </head>
 <body>
 
     <div class="dashboard-container">
-        <!-- Sidebar Navigation -->
         <aside id="sidebar" class="sidebar">
             <div class="sidebar-header">
-                <h2>Family Hub</h2>
                 <button id="sidebarToggle" class="icon-btn"><i class="fas fa-bars"></i></button>
+                <span class="sidebar-title menu-text">Family Hub</span>
             </div>
-            <nav class="sidebar-nav">
-                <a href="index.html"><i class="fas fa-calendar-alt"></i> <span>Calendar</span></a>
-                <a href="meals.html"><i class="fas fa-utensils"></i> <span>Meal Planner</span></a>
-                <a href="shopping.html" class="active"><i class="fas fa-shopping-basket"></i> <span>Shopping List</span></a>
-            </nav>
+            <ul class="sidebar-menu">
+                <li><a href="index.html"><i class="fas fa-calendar-alt"></i><span class="menu-text">Calendar</span></a></li>
+                <li><a href="meals.html"><i class="fas fa-utensils"></i><span class="menu-text">Meals</span></a></li>
+                <li class="active"><a href="shopping.html"><i class="fas fa-shopping-basket"></i><span class="menu-text">Shopping List</span></a></li>
+                <li><a href="settings.html"><i class="fas fa-cog"></i><span class="menu-text">Settings</span></a></li>
+            </ul>
         </aside>
 
-        <!-- Main Content Area Wrapper -->
-        <main class="content-area">
-            <header class="content-header">
-                <button id="contentMenuToggle" class="icon-btn mobile-only"><i class="fas fa-bars"></i></button>
+        <main class="main-content">
+            <header class="content-header" style="padding: 20px; display: flex; align-items: center; gap: 12px;">
+                <button id="contentMenuToggle" class="icon-btn hide-on-desktop"><i class="fas fa-bars"></i></button>
                 <h1>Weekly Grocery & Shopping List</h1>
             </header>
 
-            <!-- Target container for engine verification -->
-            <div id="shopping-list-container" class="shopping-content-area">
+            <div id="shopping-list-container" class="shopping-content-area" style="padding: 0 20px;">
                 
-                <!-- Input Controls Bar -->
                 <div class="shopping-input-group" style="display: flex; gap: 10px; margin-bottom: 20px;">
                     <input 
                         type="text" 
@@ -50,7 +47,6 @@
                     </button>
                 </div>
 
-                <!-- Action Controls Row -->
                 <div class="shopping-actions" style="margin-bottom: 15px; text-align: right;">
                     <button 
                         id="clear-completed-btn" 
@@ -60,19 +56,14 @@
                     </button>
                 </div>
 
-                <!-- Dynamic Target List Stack -->
                 <ul 
                     id="shopping-list" 
                     style="list-style: none; padding: 0; margin: 0; background: white; border: 1px solid #ddd; border-radius: 4px;"
                 >
-                    <!-- Script.js will dynamically paint list items here -->
-                </ul>
+                    </ul>
 
             </div>
         </main>
     </div>
-
-    <!-- External Script Pipeline Ingestion -->
-    <script src="script.js"></script>
 </body>
 </html>
