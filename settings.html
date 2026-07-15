@@ -3,47 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Family Hub - Settings</title>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Shared Stylesheet -->
+    <title>Family Board Dashboard - Settings</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Shared Core Application Script -->
-    <script src="script.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+
+    <!-- Unified Flex Structural Wrapper -->
     <div class="dashboard-container">
-        
-        <!-- SIDEBAR NAVIGATION DRAWER -->
-        <aside id="sidebar" class="sidebar">
+
+        <!-- Retractable Side Menu -->
+        <nav id="sidebar" class="sidebar collapsed">
             <div class="sidebar-header">
                 <button id="sidebarToggle" class="icon-btn"><i class="fas fa-bars"></i></button>
-                <span class="sidebar-title menu-text">Family Hub</span>
+                <span class="sidebar-title">Family Hub</span>
             </div>
             <ul class="sidebar-menu">
-                <li><a href="index.html"><i class="fas fa-calendar-alt"></i><span class="menu-text">Calendar</span></a></li>
-                <li><a href="meals.html"><i class="fas fa-utensils"></i><span class="menu-text">Meals</span></a></li>
-                <li><a href="shopping.html"><i class="fas fa-shopping-basket"></i><span class="menu-text">Shopping List</span></a></li>
-                <li class="active"><a href="settings.html"><i class="fas fa-cog"></i><span class="menu-text">Settings</span></a></li>
+                <li>
+                    <a href="index.html">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span class="menu-text">Calendar</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="meals.html">
+                        <i class="fas fa-utensils"></i>
+                        <span class="menu-text">Meals</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="shopping.html">
+                        <i class="fas fa-shopping-basket"></i>
+                        <span class="menu-text">Shopping List</span>
+                    </a>
+                </li>
+                <li class="active">
+                    <a href="settings.html">
+                        <i class="fas fa-cog"></i>
+                        <span class="menu-text">Settings</span>
+                    </a>
+                </li>
             </ul>
-        </aside>
+        </nav>
 
-        <!-- MAIN WORK AREA CONTENT -->
+        <!-- Main Content Area Wrapper -->
         <main class="main-content">
-            <header class="content-header" style="padding: 20px; display: flex; align-items: center; gap: 12px;">
-                <button id="contentMenuToggle" class="icon-btn hide-on-desktop"><i class="fas fa-bars"></i></button>
-                <h1>Settings</h1>
-            </header>
+            <section class="shopping-section"> <!-- Reusing layout section class padding -->
+                <div class="controls">
+                    <div class="header-left">
+                        <button id="contentMenuToggle" class="icon-btn hide-on-desktop"><i class="fas fa-bars"></i></button>
+                        <h1>Settings</h1>
+                    </div>
+                </div>
 
-            <!-- Settings Content Container -->
-            <section style="padding: 20px;">
+                <!-- Google Authentication Interface Card -->
                 <div class="blank-state-card">
-                    <span class="placeholder-icon"><i class="fas fa-sliders-h"></i></span>
-                    <p>App Settings Options Coming Soon.</p>
+                    <span class="placeholder-icon"><i class="fab fa-google"></i></span>
+                    <h2>Account Connection</h2>
+                    <p style="margin-bottom: 25px;">Sign in with your Google account to sync your family calendars seamlessly.</p>
+                    
+                    <div style="display: flex; justify-content: center; gap: 15px;">
+                        <button id="auth-button" onclick="handleAuthClick()">Sign In to Google</button>
+                        <button id="signout-button" class="clear-bought-btn hidden" onclick="handleSignoutClick()">Sign Out</button>
+                    </div>
                 </div>
             </section>
         </main>
-
+        
     </div>
+
+    <!-- Asynchronous Google API & Architecture Engines -->
+    <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+    <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+    <script src="script.js"></script>
 </body>
 </html>
