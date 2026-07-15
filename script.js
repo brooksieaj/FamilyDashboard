@@ -636,3 +636,107 @@ window.onload = () => {
     if (typeof coreDashboardOnload === 'function') coreDashboardOnload();
     initMealPlannerEngine();
 };
+
+/* ==========================================
+   10. SHOPPING LIST ENGINE (PAGE SPECIFIC)
+   ========================================== */
+function initShoppingListEngine() {
+    // 1. Target the unique wrapper for the shopping list page to prevent cross-page errors
+    const shoppingContainer = document.getElementById('shopping-list-container') || document.querySelector('.shopping-content-area');
+    if (!shoppingContainer) return; 
+
+    console.log("Shopping List Engine Activated");
+
+    const itemInput = document.getElementById('shopping-item-input');
+    const addBtn = document.getElementById('add-item-btn');
+    const listContainer = document.getElementById('shopping-list');
+    const clearCompletedBtn = document.getElementById('clear-completed-btn');
+
+    // Load initial list from local cache storage
+    let shoppingList = JSON.parse(localStorage.getItem('family_shopping_list')) || [];
+
+    function saveAndRenderList() {
+        localStorage.setItem('family_shopping_list', JSON.stringify(shoppingList));
+        if (!listContainer) return;
+        
+        listContainer.innerHTML = '';
+        
+        if (shoppingList.length === 0) {
+            listContainer.innerHTML = '<li class="empty-state" style="color: #777; padding: 15px; text-align: center;">Your shopping list is clear!</li>';
+            return;
+        }
+
+        shoppingList.forEach((item, index) => {
+            const li = document.createElement('li');
+            li.className = `shopping-item ${item.completed ? 'completed' : ''}`;
+            li.style.display = 'flex';
+            li.style.alignItems = 'center';
+            li.style.justifyContent = 'space-between';
+            li.style.padding = '10px';
+            li.style.borderBottom = '1px solid #eee';
+
+            li.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px; cursor: pointer;" class="item-toggle-zone">
+                    <i class="${item.completed ? 'fas fa-check-circle' : 'far fa-circle'}" style="color: ${item.completed ? '#0f9d58' : '#777'}"></i>
+                    <span style="text-decoration: ${item.completed ? 'line-through' : 'none'}; color: ${item.completed ? '#aaa' : '#333'}">${item.text}</span>
+                </div>
+                <button class="delete-item-btn" style="background: none; border: none; color: #db4437; cursor: pointer;">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+
+            // Toggle item state handler
+            li.querySelector('.item-toggle-zone').onclick = () => {
+                shoppingList[index].completed = !shoppingList[index].completed;
+                saveAndRenderList();
+            };
+
+            // Individual drop item button handler
+            li.querySelector('.delete-item-btn').onclick = () => {
+                shoppingList.splice(index, 1);
+                saveAndRenderList();
+            };
+
+            listContainer.appendChild(li);
+        });
+    }
+
+    function addNewItem() {
+        if (!itemInput) return;
+        const text = itemInput.value.trim();
+        if (!text) return;
+
+        shoppingList.push({ text: text, completed: false });
+        itemInput.value = '';
+        saveAndRenderList();
+    }
+
+    // Bind event handlers dynamically to strip inline HTML triggers
+    if (addBtn) {
+        addBtn.addEventListener('click', addNewItem);
+    }
+
+    if (itemInput) {
+        itemInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addNewItem();
+        });
+    }
+
+    if (clearCompletedBtn) {
+        clearCompletedBtn.addEventListener('click', () => {
+            shoppingList = shoppingList.filter(item => !item.completed);
+            saveAndRenderList();
+        });
+    }
+
+    // Run the initial paint sequence
+    saveAndRenderList();
+}
+
+// Adjust the master event pipeline to cleanly kick off the engine loops
+const finalDashboardOnload = window.onload;
+window.onload = () => {
+    if (typeof finalDashboardOnload === 'function') finalDashboardOnload();
+    initMealPlannerEngine();
+    initShoppingListEngine(); // Safely triggers initialization hooks
+};

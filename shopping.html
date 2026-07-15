@@ -58,17 +58,34 @@
         // Core List Application State Logic
         let shoppingItems = JSON.parse(localStorage.getItem('familyShoppingItems')) || [];
 
+        // Sidebar Collapse Logic to support layout states defined in style.css
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const contentMenuToggle = document.getElementById('contentMenuToggle');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('collapsed');
+        }
+
+        if (sidebarToggle) sidebarToggle.addEventListener('click', toggleSidebar);
+        if (contentMenuToggle) contentMenuToggle.addEventListener('click', toggleSidebar);
+
+        // Core Render Function
         function renderList() {
             const listEl = document.getElementById('shoppingList');
             if (!listEl) return;
             listEl.innerHTML = '';
+            
             shoppingItems.forEach((item, index) => {
                 const li = document.createElement('li');
                 li.className = `shopping-item ${item.checked ? 'checked' : ''}`;
                 li.onclick = () => toggleItem(index);
+                
                 li.innerHTML = `
                     <div class="checkbox-container">
-                        <div class="custom-checkbox"><i class="fas fa-check"></i></div>
+                        <div class="custom-checkbox">
+                            <i class="fas fa-check"></i>
+                        </div>
                         <span class="item-text">${item.text}</span>
                     </div>
                 `;
@@ -102,6 +119,7 @@
             renderList();
         }
 
+        // Initial setup execution
         renderList();
     </script>
 </body>
