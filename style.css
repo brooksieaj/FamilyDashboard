@@ -1,4 +1,6 @@
-/* 1. Global Reset & Layout */
+/* ==========================================
+   1. GLOBAL RESET & LAYOUT
+   ========================================== */
 body, html {
     margin: 0;
     padding: 0;
@@ -10,12 +12,14 @@ body, html {
 }
 
 .dashboard-container {
-    display: grid;
-    grid-template-columns: 1fr; 
+    display: flex; /* Updated from grid to naturally coordinate with sidebar flex layouts */
     min-height: 100vh;
+    width: 100%;
 }
 
-/* 2. Calendar Section */
+/* ==========================================
+   2. CALENDAR SECTION
+   ========================================== */
 .calendar-section {
     padding: 20px;
     display: flex;
@@ -78,7 +82,9 @@ h1 {
     font-size: 2.1rem; 
 }
 
-/* 3. The Grid & Headers */
+/* ==========================================
+   3. THE GRID & HEADERS
+   ========================================== */
 .calendar-header {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -169,7 +175,9 @@ h1 {
     z-index: 1;
 }
 
-/* 4. Event Styling */
+/* ==========================================
+   4. EVENT STYLING
+   ========================================== */
 .event {
     color: white;
     font-size: 0.9rem; 
@@ -184,7 +192,9 @@ h1 {
     cursor: pointer;
 }
 
-/* 5. Buttons and Modals */
+/* ==========================================
+   5. BUTTONS AND MODALS
+   ========================================== */
 button { 
     padding: 12px 22px; 
     background-color: #4285f4; 
@@ -387,4 +397,133 @@ body {
         width: 0px;
         border-right: none;
     }
+}
+
+/* ==========================================
+   7. SHOPPING LIST SPECIFIC APPLICATION WORKSPACE
+   ========================================== */
+.shopping-section {
+    padding: 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    flex-grow: 1;
+}
+
+/* Input Form Bar styling */
+.shopping-form {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.shopping-input {
+    flex-grow: 1;
+    border: 2px solid #e0e2e6;
+    border-radius: 8px;
+    padding: 12px 16px;
+    outline: none;
+    box-sizing: border-box;
+    background-color: #ffffff;
+    font-size: 1.05rem;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+
+.shopping-input:focus {
+    border-color: #4285f4;
+}
+
+.add-item-btn {
+    background-color: #1a73e8;
+    padding: 0 24px;
+    white-space: nowrap;
+}
+.add-item-btn:hover { background-color: #1557b0; }
+
+/* Clear bought control custom styling */
+.clear-bought-btn {
+    background-color: #5f6368;
+}
+.clear-bought-btn:hover { background-color: #45474a; }
+
+/* List View Workspace */
+.shopping-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.shopping-item {
+    background: white;
+    padding: 16px 20px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid #e0e2e6;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.shopping-item:hover {
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    border-color: #ccc;
+}
+
+.shopping-item.checked {
+    background-color: #f8f9fa;
+    border-color: #e0e2e6;
+    opacity: 0.7;
+}
+
+.shopping-item.checked .item-text {
+    text-decoration: line-through;
+    color: #888;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.custom-checkbox {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #5f6368;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.shopping-item.checked .custom-checkbox {
+    background-color: #1a73e8;
+    border-color: #1a73e8;
+}
+
+.custom-checkbox i {
+    color: white;
+    font-size: 0.75rem;
+    display: none;
+}
+
+.shopping-item.checked .custom-checkbox i {
+    display: block;
+}
+
+.item-text {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
 }
