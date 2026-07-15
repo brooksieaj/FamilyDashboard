@@ -6,6 +6,10 @@
     <title>Family Dashboard - Shopping List</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://apis.google.com/js/api.js" async defer></script>
+    
     <script src="script.js" defer></script>
 </head>
 <body>
@@ -24,10 +28,11 @@
             </ul>
         </aside>
 
-<main class="main-content">
+        <main class="main-content">
             <header class="content-header" style="padding: 20px; display: flex; align-items: center; gap: 12px;">
                 <button id="contentMenuToggle" class="icon-btn hide-on-desktop"><i class="fas fa-bars"></i></button>
                 <h1>Shopping List</h1>
+                <span id="sync-status" style="font-size: 0.8rem; color: #777; margin-left: auto; font-weight: normal;">Initializing...</span>
             </header>
 
             <div id="shopping-list-container" class="shopping-content-area" style="padding: 0 20px;">

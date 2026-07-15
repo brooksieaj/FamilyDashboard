@@ -53,6 +53,10 @@ function gapiLoaded() {
             if (document.getElementById('calendar-grid')) {
                 fetchWeatherData(); // Triggers chain: weather -> fetch events -> render
             }
+            // Trigger shopping list sync immediately if on the shopping page
+            if (window.syncGoogleTasks) {
+                window.syncGoogleTasks();
+            }
         } else if (localStorage.getItem('google_session_active') === 'true' && tokenClient) {
             tokenClient.requestAccessToken({ prompt: '' });
         } else {
@@ -82,6 +86,9 @@ function gisLoaded() {
 
             if (document.getElementById('calendar-grid')) {
                 fetchWeatherData();
+            }
+            if (window.syncGoogleTasks) {
+                window.syncGoogleTasks();
             }
         },
     });
@@ -541,12 +548,6 @@ function runtimeInitEngine() {
     }
 }
 
-const existingOnload = window.onload;
-window.onload = () => {
-    if (typeof existingOnload === 'function') existingOnload();
-    runtimeInitEngine();
-};
-
 // ==========================================
 // IMMEDIATE INSTANT SIDEBAR CONTROLLER 
 // ==========================================
@@ -630,18 +631,10 @@ function initMealPlannerEngine() {
     }
 }
 
-// Intercept your master entry runtime pipeline to initialize components safely
-const coreDashboardOnload = window.onload;
-window.onload = () => {
-    if (typeof coreDashboardOnload === 'function') coreDashboardOnload();
-    initMealPlannerEngine();
-};
-
 /* ==========================================
-   10. SHOPPING LIST ENGINE (PAGE SPECIFIC)
+   10. SHOPPING LIST ENGINE (GOOGLE TASKS SYNCED)
    ========================================== */
 function initShoppingListEngine() {
-    // 1. Target the unique wrapper for the shopping list page to prevent cross-page errors
     const shoppingContainer = document.getElementById('shopping-list-container') || document.querySelector('.shopping-content-area');
     if (!shoppingContainer) return; 
 
@@ -652,9 +645,15 @@ function initShoppingListEngine() {
     const listContainer = document.getElementById('shopping-list');
     const clearCompletedBtn = document.getElementById('clear-completed-btn');
 
-    // Load initial list from local cache storage
     let shoppingList = JSON.parse(localStorage.getItem('family_shopping_list')) || [];
+    let googleTasksEnabled = false;
+    let shoppingListId = null;
+    let pollInterval = null;
 
+    // Render current items directly on setup
+    saveAndRenderList();
+
+    // 1. Local Rendering Pipeline
     function saveAndRenderList() {
         localStorage.setItem('family_shopping_list', JSON.stringify(shoppingList));
         if (!listContainer) return;
@@ -691,30 +690,134 @@ function initShoppingListEngine() {
                 </button>
             `;
 
-            // Toggle item state handler
-            li.querySelector('.item-toggle-zone').onclick = () => {
+            // Toggle completion handler
+            li.querySelector('.item-toggle-zone').onclick = async () => {
                 shoppingList[index].completed = !shoppingList[index].completed;
                 saveAndRenderList();
+                if (googleTasksEnabled && item.id) {
+                    try {
+                        await gapi.client.tasks.tasks.update({
+                            tasklist: shoppingListId,
+                            task: item.id,
+                            resource: {
+                                id: item.id,
+                                title: item.text,
+                                status: shoppingList[index].completed ? 'completed' : 'needsAction'
+                            }
+                        });
+                    } catch (err) {
+                        console.error("Failed to update remote task:", err);
+                    }
+                }
             };
 
-            // Individual drop item button handler
-            li.querySelector('.delete-item-btn').onclick = () => {
-                shoppingList.splice(index, 1);
+            // Delete item handler
+            li.querySelector('.delete-item-btn').onclick = async () => {
+                const removedItem = shoppingList.splice(index, 1)[0];
                 saveAndRenderList();
+                if (googleTasksEnabled && removedItem.id) {
+                    try {
+                        await gapi.client.tasks.tasks.delete({
+                            tasklist: shoppingListId,
+                            task: removedItem.id
+                        });
+                    } catch (err) {
+                        console.error("Failed to delete remote task:", err);
+                    }
+                }
             };
 
             listContainer.appendChild(li);
         });
     }
 
-    function addNewItem() {
+    // 2. Core Mutations
+    async function addNewItem() {
         if (!itemInput) return;
         const text = itemInput.value.trim();
         if (!text) return;
 
-        shoppingList.push({ text: text, completed: false });
+        const newItem = { text: text, completed: false, id: null };
+        shoppingList.push(newItem);
         itemInput.value = '';
         saveAndRenderList();
+
+        if (googleTasksEnabled) {
+            try {
+                const res = await gapi.client.tasks.tasks.insert({
+                    tasklist: shoppingListId,
+                    resource: {
+                        title: text,
+                        status: 'needsAction'
+                    }
+                });
+                newItem.id = res.result.id;
+                saveAndRenderList();
+            } catch (err) {
+                console.error("Failed to insert remote task:", err);
+            }
+        }
+    }
+
+    // 3. Google Tasks Synchronization Logic
+    window.syncGoogleTasks = async function() {
+        const token = getValidAccessToken();
+        if (!token || !gapi.client.tasks) {
+            console.log("Sync skipped: No active connection details found in Settings.");
+            return;
+        }
+
+        try {
+            googleTasksEnabled = true;
+
+            // Step A: Find or Create 'Shopping List' TaskList container
+            const listsRes = await gapi.client.tasks.tasklists.list();
+            const lists = listsRes.result.items || [];
+            let targetList = lists.find(l => l.title === "Shopping List");
+
+            if (!targetList) {
+                console.log("Creating default 'Shopping List' on Google Tasks...");
+                const newListRes = await gapi.client.tasks.tasklists.insert({
+                    resource: { title: "Shopping List" }
+                });
+                targetList = newListRes.result;
+            }
+            shoppingListId = targetList.id;
+
+            // Step B: Pull remote tasks and merge
+            await fetchAndMergeRemoteTasks();
+
+            // Step C: Set up background engine loop (Poll every 10 seconds)
+            if (pollInterval) clearInterval(pollInterval);
+            pollInterval = setInterval(fetchAndMergeRemoteTasks, 10000);
+
+        } catch (err) {
+            console.error("Google Tasks Sync Handshake failed:", err);
+            googleTasksEnabled = false;
+        }
+    };
+
+    async function fetchAndMergeRemoteTasks() {
+        if (!shoppingListId) return;
+        try {
+            const tasksRes = await gapi.client.tasks.tasks.list({
+                tasklist: shoppingListId,
+                showCompleted: true,
+                showHidden: true
+            });
+            const remoteTasks = tasksRes.result.items || [];
+
+            // Simple reconcile strategy: Remote acts as absolute master
+            shoppingList = remoteTasks.map(task => ({
+                id: task.id,
+                text: task.title,
+                completed: task.status === 'completed'
+            }));
+
+            saveAndRenderList();
+        } catch (err) {
+            console.warn("Unable to pull updates from Google Tasks cloud:", err);
+        }
     }
 
     // Bind event handlers dynamically to strip inline HTML triggers
@@ -729,20 +832,42 @@ function initShoppingListEngine() {
     }
 
     if (clearCompletedBtn) {
-        clearCompletedBtn.addEventListener('click', () => {
+        clearCompletedBtn.addEventListener('click', async () => {
+            const completedItems = shoppingList.filter(item => item.completed);
             shoppingList = shoppingList.filter(item => !item.completed);
             saveAndRenderList();
+
+            if (googleTasksEnabled) {
+                for (let item of completedItems) {
+                    if (item.id) {
+                        try {
+                            await gapi.client.tasks.tasks.delete({
+                                tasklist: shoppingListId,
+                                task: item.id
+                            });
+                        } catch (err) {
+                            console.error("Failed to clear remote task:", err);
+                        }
+                    }
+                }
+            }
         });
     }
 
-    // Run the initial paint sequence
-    saveAndRenderList();
+    // Trigger instant API handoff if GAPI is loaded early
+    if (typeof gapi !== 'undefined' && gapi.client && gapi.client.tasks) {
+        window.syncGoogleTasks();
+    }
 }
 
-// Adjust the master event pipeline to cleanly kick off the engine loops
-const finalDashboardOnload = window.onload;
-window.onload = () => {
-    if (typeof finalDashboardOnload === 'function') finalDashboardOnload();
+/* ==========================================
+   11. LIFECYCLE HANDOFF ENGINE
+   ========================================== */
+// Unifies the execution chain to prevent multiple `window.onload` overwrites
+function masterOnloadPipeline() {
+    runtimeInitEngine();
     initMealPlannerEngine();
-    initShoppingListEngine(); // Safely triggers initialization hooks
-};
+    initShoppingListEngine();
+}
+
+window.onload = masterOnloadPipeline;
