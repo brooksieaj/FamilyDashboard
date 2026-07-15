@@ -677,8 +677,14 @@ function initShoppingListEngine() {
 
             li.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 10px; cursor: pointer;" class="item-toggle-zone">
-                    <i class="${item.completed ? 'fas fa-check-circle' : 'far fa-circle'}" style="color: ${item.completed ? '#0f9d58' : '#777'}"></i>
-                    <span style="text-decoration: ${item.completed ? 'line-through' : 'none'}; color: ${item.completed ? '#aaa' : '#333'}">${item.text}</span>
+                    <input 
+                        type="checkbox" 
+                        ${item.completed ? 'checked' : ''} 
+                        style="cursor: pointer; width: 18px; height: 18px;"
+                    >
+                    <span style="text-decoration: ${item.completed ? 'line-through' : 'none'}; color: ${item.completed ? '#aaa' : '#333'}">
+                        ${item.text}
+                    </span>
                 </div>
                 <button class="delete-item-btn" style="background: none; border: none; color: #db4437; cursor: pointer;">
                     <i class="fas fa-times"></i>

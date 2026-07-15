@@ -24,19 +24,28 @@
             </ul>
         </aside>
 
-        <main class="main-content">
+<main class="main-content">
             <header class="content-header" style="padding: 20px; display: flex; align-items: center; gap: 12px;">
                 <button id="contentMenuToggle" class="icon-btn hide-on-desktop"><i class="fas fa-bars"></i></button>
-                <h1>Weekly Grocery & Shopping List</h1>
+                <h1>Shopping List</h1>
             </header>
 
             <div id="shopping-list-container" class="shopping-content-area" style="padding: 0 20px;">
                 
+                <div class="shopping-actions" style="margin-bottom: 15px; text-align: right;">
+                    <button 
+                        id="clear-completed-btn" 
+                        style="padding: 8px 15px; background-color: #f4f4f4; color: #333; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;"
+                    >
+                        <i class="fas fa-broom"></i> Clear Selected
+                    </button>
+                </div>
+
                 <div class="shopping-input-group" style="display: flex; gap: 10px; margin-bottom: 20px;">
                     <input 
                         type="text" 
                         id="shopping-item-input" 
-                        placeholder="Add an item (e.g., Almond Milk, Apples)..." 
+                        placeholder="Add an item..." 
                         style="flex-grow: 1; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem;"
                     >
                     <button 
@@ -44,15 +53,6 @@
                         style="padding: 12px 20px; background-color: #4285f4; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;"
                     >
                         <i class="fas fa-plus"></i> Add
-                    </button>
-                </div>
-
-                <div class="shopping-actions" style="margin-bottom: 15px; text-align: right;">
-                    <button 
-                        id="clear-completed-btn" 
-                        style="padding: 8px 15px; background-color: #f4f4f4; color: #333; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;"
-                    >
-                        <i class="fas fa-broom"></i> Clear Completed
                     </button>
                 </div>
 
