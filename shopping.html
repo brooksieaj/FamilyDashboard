@@ -8,168 +8,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Shared Stylesheet -->
     <link rel="stylesheet" href="style.css">
-    <style>
-        /* CRITICAL LAYOUT FIXES: Forces side-by-side view even if external CSS is cached */
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: sans-serif;
-            background-color: #f1f3f4;
-        }
-
-        .dashboard-container {
-            display: flex !important; /* Force side-by-side alignment */
-            min-height: 100vh;
-            width: 100%;
-        }
-
-        .sidebar {
-            width: 250px;
-            flex-shrink: 0;
-            background: white;
-            border-right: 1px solid #e0e0e0;
-        }
-
-        .main-content {
-            flex-grow: 1; /* Takes up the remaining space on the right */
-            display: flex;
-            flex-direction: column;
-            background-color: #f1f3f4;
-        }
-
-        /* Custom layout overrides specifically for the shopping list page */
-        .shopping-section {
-            padding: 20px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            overflow: hidden;
-        }
-
-        /* Input Form Bar */
-        .shopping-form {
-            display: flex;
-            gap: 10px;
-            flex-shrink: 0;
-        }
-
-        .shopping-input {
-            flex-grow: 1;
-            border: 1px dashed #ccc;
-            border-radius: 6px;
-            padding: 12px 16px;
-            font-family: inherit;
-            font-size: 1.3rem;
-            font-weight: 600;
-            outline: none;
-            box-sizing: border-box;
-            background-color: #ffffff;
-        }
-
-        .shopping-input:focus {
-            border: 2px solid #4285f4;
-        }
-
-        .add-item-btn {
-            background-color: #1a73e8;
-            font-size: 1.1rem;
-            padding: 0 24px;
-            border-radius: 6px;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        .add-item-btn:hover { background-color: #1557b0; }
-
-        /* List View Workspace */
-        .shopping-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            overflow-y: auto;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .shopping-item {
-            background: white;
-            padding: 15px 20px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border: 1px solid #e0e0e0;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            user-select: none;
-        }
-
-        .shopping-item:hover {
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            border-color: #ccc;
-        }
-
-        .shopping-item.checked {
-            background-color: #f8f9fa;
-            border-color: #e0e0e0;
-        }
-
-        .shopping-item.checked .item-text {
-            text-decoration: line-through;
-            color: #888;
-        }
-
-        .checkbox-container {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .custom-checkbox {
-            width: 22px;
-            height: 22px;
-            border: 2px solid #5f6368;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-        }
-
-        .shopping-item.checked .custom-checkbox {
-            background-color: #1a73e8;
-            border-color: #1a73e8;
-        }
-
-        .custom-checkbox i {
-            color: white;
-            font-size: 0.8rem;
-            display: none;
-        }
-
-        .shopping-item.checked .custom-checkbox i {
-            display: block;
-        }
-
-        .item-text {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .clear-bought-btn {
-            background-color: #5f6368;
-            font-size: 1.1rem;
-            padding: 10px 20px;
-        }
-
-        .clear-bought-btn:hover { background-color: #45474a; }
-    </style>
 </head>
 <body>
     <div class="dashboard-container">
@@ -178,7 +16,7 @@
         <aside id="sidebar" class="sidebar">
             <div class="sidebar-header">
                 <button id="sidebarToggle" class="icon-btn"><i class="fas fa-bars"></i></button>
-                <h1 class="brand menu-text">Family Hub</h1>
+                <span class="sidebar-title menu-text">Family Hub</span>
             </div>
             <ul class="sidebar-menu">
                 <li><a href="index.html"><i class="fas fa-calendar-alt"></i><span class="menu-text">Calendar</span></a></li>
@@ -190,28 +28,24 @@
 
         <!-- MAIN WORK AREA CONTENT -->
         <main class="main-content">
-            <!-- Header bar with Mobile Hamburgers & Controls -->
-            <header class="content-header">
+            <header class="content-header" style="padding: 20px; display: flex; justify-content: space-between; align-items: center;">
                 <div class="header-left">
                     <button id="contentMenuToggle" class="icon-btn hide-on-desktop"><i class="fas fa-bars"></i></button>
-                    <h2>Shopping List</h2>
+                    <h1>Shopping List</h1>
                 </div>
                 <div class="button-group">
-                    <button class="header-btn clear-bought-btn" onclick="clearChecked()"><i class="fas fa-trash-alt"></i> Clear Checked</button>
+                    <button class="clear-bought-btn" onclick="clearChecked()"><i class="fas fa-trash-alt"></i> Clear Checked</button>
                 </div>
             </header>
 
-            <!-- Embedded Workspace Grid Section -->
-            <section class="shopping-section" style="flex-grow: 1;">
-                <!-- New item entry forms row -->
+            <section class="shopping-section">
                 <form class="shopping-form" onsubmit="addNewItem(event)">
-                    <input type="text" id="itemInput" class="shopping-input" placeholder="Add an item to the list..." autocomplete="off">
+                    <input type="text" id="itemInput" class="shopping-input" placeholder="Add an item..." autocomplete="off">
                     <button type="submit" class="add-item-btn"><i class="fas fa-plus"></i> Add</button>
                 </form>
 
-                <!-- List target rendering zone -->
                 <ul id="shoppingList" class="shopping-list">
-                    <!-- Javascript populates items statically here -->
+                    <!-- Dynamic Items render here -->
                 </ul>
             </section>
         </main>
@@ -219,7 +53,6 @@
     </div>
 
     <script>
-        // Inline Sidebar Toggle Controller UI Handlers
         const sidebar = document.getElementById('sidebar');
         const toggleBtn = document.getElementById('sidebarToggle');
         const contentToggleBtn = document.getElementById('contentMenuToggle');
@@ -231,7 +64,6 @@
         if (toggleBtn) toggleBtn.addEventListener('click', toggleSidebar);
         if (contentToggleBtn) contentToggleBtn.addEventListener('click', toggleSidebar);
 
-        // Core List Application State Logic
         let shoppingItems = JSON.parse(localStorage.getItem('familyShoppingItems')) || [];
 
         function renderList() {
@@ -242,12 +74,9 @@
                 const li = document.createElement('li');
                 li.className = `shopping-item ${item.checked ? 'checked' : ''}`;
                 li.onclick = () => toggleItem(index);
-                
                 li.innerHTML = `
                     <div class="checkbox-container">
-                        <div class="custom-checkbox">
-                            <i class="fas fa-check"></i>
-                        </div>
+                        <div class="custom-checkbox"><i class="fas fa-check"></i></div>
                         <span class="item-text">${item.text}</span>
                     </div>
                 `;
@@ -258,7 +87,6 @@
         function addNewItem(e) {
             e.preventDefault();
             const input = document.getElementById('itemInput');
-            if (!input) return;
             const text = input.value.trim();
             if (text) {
                 shoppingItems.push({ text: text, checked: false });
@@ -282,7 +110,6 @@
             renderList();
         }
 
-        // Initial Run load items
         renderList();
     </script>
 </body>

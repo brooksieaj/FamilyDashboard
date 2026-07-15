@@ -3,109 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Family Shopping List</title>
+    <title>Family Hub - Settings</title>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Shared Stylesheet -->
     <link rel="stylesheet" href="style.css">
-    <style>
-        /* Only functional overrides unique to the shopping list items */
-        .shopping-section {
-            padding: 20px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            overflow: hidden;
-        }
-
-        .shopping-form {
-            display: flex;
-            gap: 10px;
-            flex-shrink: 0;
-        }
-
-        .shopping-input {
-            flex-grow: 1;
-            border: 1px dashed #ccc;
-            border-radius: 6px;
-            padding: 12px 16px;
-            outline: none;
-            box-sizing: border-box;
-            background-color: #ffffff;
-        }
-
-        .shopping-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            overflow-y: auto;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .shopping-item {
-            background: white;
-            padding: 15px 20px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border: 1px solid #e0e0e0;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            user-select: none;
-        }
-
-        .shopping-item:hover {
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            border-color: #ccc;
-        }
-
-        .shopping-item.checked {
-            background-color: #f8f9fa;
-            border-color: #e0e0e0;
-        }
-
-        .shopping-item.checked .item-text {
-            text-decoration: line-through;
-            color: #888;
-        }
-
-        .checkbox-container {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .custom-checkbox {
-            width: 22px;
-            height: 22px;
-            border: 2px solid #5f6368;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-        }
-
-        .shopping-item.checked .custom-checkbox {
-            background-color: #1a73e8;
-            border-color: #1a73e8;
-        }
-
-        .custom-checkbox i {
-            color: white;
-            font-size: 0.8rem;
-            display: none;
-        }
-
-        .shopping-item.checked .custom-checkbox i {
-            display: block;
-        }
-    </style>
 </head>
 <body>
     <div class="dashboard-container">
@@ -114,43 +16,36 @@
         <aside id="sidebar" class="sidebar">
             <div class="sidebar-header">
                 <button id="sidebarToggle" class="icon-btn"><i class="fas fa-bars"></i></button>
-                <h1 class="brand menu-text">Family Hub</h1>
+                <span class="sidebar-title menu-text">Family Hub</span>
             </div>
             <ul class="sidebar-menu">
                 <li><a href="index.html"><i class="fas fa-calendar-alt"></i><span class="menu-text">Calendar</span></a></li>
                 <li><a href="meals.html"><i class="fas fa-utensils"></i><span class="menu-text">Meals</span></a></li>
-                <li class="active"><a href="shopping.html"><i class="fas fa-shopping-basket"></i><span class="menu-text">Shopping List</span></a></li>
-                <li><a href="settings.html"><i class="fas fa-cog"></i><span class="menu-text">Settings</span></a></li>
+                <li><a href="shopping.html"><i class="fas fa-shopping-basket"></i><span class="menu-text">Shopping List</span></a></li>
+                <li class="active"><a href="settings.html"><i class="fas fa-cog"></i><span class="menu-text">Settings</span></a></li>
             </ul>
         </aside>
 
         <!-- MAIN WORK AREA CONTENT -->
         <main class="main-content">
-            <header class="content-header">
-                <div class="header-left">
-                    <button id="contentMenuToggle" class="icon-btn hide-on-desktop"><i class="fas fa-bars"></i></button>
-                    <h2>Shopping List</h2>
-                </div>
-                <div class="button-group">
-                    <button class="header-btn clear-bought-btn" onclick="clearChecked()"><i class="fas fa-trash-alt"></i> Clear Checked</button>
-                </div>
+            <header class="content-header" style="padding: 20px; display: flex; align-items: center; gap: 12px;">
+                <button id="contentMenuToggle" class="icon-btn hide-on-desktop"><i class="fas fa-bars"></i></button>
+                <h1>Settings</h1>
             </header>
 
-            <section class="shopping-section" style="flex-grow: 1;">
-                <form class="shopping-form" onsubmit="addNewItem(event)">
-                    <input type="text" id="itemInput" class="shopping-input" placeholder="Add an item to the list..." autocomplete="off">
-                    <button type="submit" class="add-item-btn"><i class="fas fa-plus"></i> Add</button>
-                </form>
-
-                <ul id="shoppingList" class="shopping-list">
-                    <!-- Dynamic Items -->
-                </ul>
+            <!-- Settings Content Container -->
+            <section style="padding: 20px;">
+                <div class="blank-state-card">
+                    <span class="placeholder-icon"><i class="fas fa-sliders-h"></i></span>
+                    <p>App Settings Options Coming Soon.</p>
+                </div>
             </section>
         </main>
 
     </div>
 
     <script>
+        // Sidebar Collapsing Logic
         const sidebar = document.getElementById('sidebar');
         const toggleBtn = document.getElementById('sidebarToggle');
         const contentToggleBtn = document.getElementById('contentMenuToggle');
@@ -161,58 +56,6 @@
 
         if (toggleBtn) toggleBtn.addEventListener('click', toggleSidebar);
         if (contentToggleBtn) contentToggleBtn.addEventListener('click', toggleSidebar);
-
-        let shoppingItems = JSON.parse(localStorage.getItem('familyShoppingItems')) || [];
-
-        function renderList() {
-            const listEl = document.getElementById('shoppingList');
-            if (!listEl) return;
-            listEl.innerHTML = '';
-            shoppingItems.forEach((item, index) => {
-                const li = document.createElement('li');
-                li.className = `shopping-item ${item.checked ? 'checked' : ''}`;
-                li.onclick = () => toggleItem(index);
-                
-                li.innerHTML = `
-                    <div class="checkbox-container">
-                        <div class="custom-checkbox">
-                            <i class="fas fa-check"></i>
-                        </div>
-                        <span class="item-text">${item.text}</span>
-                    </div>
-                `;
-                listEl.appendChild(li);
-            });
-        }
-
-        function addNewItem(e) {
-            e.preventDefault();
-            const input = document.getElementById('itemInput');
-            if (!input) return;
-            const text = input.value.trim();
-            if (text) {
-                shoppingItems.push({ text: text, checked: false });
-                saveAndRender();
-                input.value = '';
-            }
-        }
-
-        function toggleItem(index) {
-            shoppingItems[index].checked = !shoppingItems[index].checked;
-            saveAndRender();
-        }
-
-        function clearChecked() {
-            shoppingItems = shoppingItems.filter(item => !item.checked);
-            saveAndRender();
-        }
-
-        function saveAndRender() {
-            localStorage.setItem('familyShoppingItems', JSON.stringify(shoppingItems));
-            renderList();
-        }
-
-        renderList();
     </script>
 </body>
 </html>
