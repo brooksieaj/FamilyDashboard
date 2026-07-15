@@ -3,15 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Family Board - Shopping List</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Family Shopping List</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
     <style>
-        .shopping-container {
-            background-color: #f0f2f5;
-            border: 2px solid #333;
-            border-radius: 8px;
-            flex-grow: 1;
+        /* Custom layout overrides specifically for the shopping list page */
+        .shopping-section {
             padding: 20px;
             box-sizing: border-box;
             display: flex;
@@ -54,6 +51,7 @@
             cursor: pointer;
             font-weight: 600;
         }
+
         .add-item-btn:hover { background-color: #1557b0; }
 
         /* List View Workspace */
@@ -74,35 +72,58 @@
             border-radius: 6px;
             display: flex;
             align-items: center;
-            gap: 15px;
-            border: 1px solid #e0e2e6;
+            justify-content: space-between;
+            border: 1px solid #e0e0e0;
             cursor: pointer;
+            transition: all 0.2s ease;
             user-select: none;
-            transition: background 0.2s;
         }
 
         .shopping-item:hover {
-            background-color: #f8f9fa;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-color: #ccc;
         }
 
         .shopping-item.checked {
-            background-color: #f1f3f4;
-            opacity: 0.6;
+            background-color: #f8f9fa;
+            border-color: #e0e0e0;
         }
 
         .shopping-item.checked .item-text {
             text-decoration: line-through;
-            color: #5f6368;
+            color: #888;
         }
 
-        .checkbox-icon {
-            font-size: 1.4rem;
-            color: #5f6368;
-            width: 24px;
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
-        .shopping-item.checked .checkbox-icon {
-            color: #1a73e8;
+        .custom-checkbox {
+            width: 22px;
+            height: 22px;
+            border: 2px solid #5f6368;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .shopping-item.checked .custom-checkbox {
+            background-color: #1a73e8;
+            border-color: #1a73e8;
+        }
+
+        .custom-checkbox i {
+            color: white;
+            font-size: 0.8rem;
+            display: none;
+        }
+
+        .shopping-item.checked .custom-checkbox i {
+            display: block;
         }
 
         .item-text {
@@ -116,66 +137,50 @@
             font-size: 1.1rem;
             padding: 10px 20px;
         }
+
         .clear-bought-btn:hover { background-color: #45474a; }
     </style>
 </head>
 <body>
-
-    <!-- Retractable Side Menu -->
-    <nav id="sidebar" class="sidebar collapsed">
-        <div class="sidebar-header">
-            <button id="sidebarToggle" class="icon-btn"><i class="fas fa-bars"></i></button>
-            <span class="sidebar-title">Family Hub</span>
-        </div>
-        <ul class="sidebar-menu">
-            <li>
-                <a href="index.html">
-                    <i class="fas fa-calendar-alt"></i>
-                    <span class="menu-text">Calendar</span>
-                </a>
-            </li>
-            <li>
-                <a href="meals.html">
-                    <i class="fas fa-utensils"></i>
-                    <span class="menu-text">Meals</span>
-                </a>
-            </li>
-            <li class="active">
-                <a href="shopping.html">
-                    <i class="fas fa-shopping-basket"></i>
-                    <span class="menu-text">Shopping List</span>
-                </a>
-            </li>
-        </ul>
-    </nav>
-
-    <!-- Main Content Area -->
-    <main class="main-content" style="height: 100vh; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column;">
-        <header class="controls" style="margin-bottom: 15px; flex-shrink: 0;">
-            <div class="header-left">
-                <button id="contentMenuToggle" class="icon-btn hide-on-desktop"><i class="fas fa-bars"></i></button>
-                <h1>Shopping List</h1>
+    <div class="dashboard-container">
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <button id="sidebarToggle" class="icon-btn"><i class="fas fa-bars"></i></button>
+                <h1 class="brand menu-text">Family Hub</h1>
             </div>
-            <div class="button-group">
-                <button class="clear-bought-btn" onclick="clearCheckedItems()"><i class="fas fa-check-double" style="margin-right: 8px;"></i>Clear Checked</button>
-            </div>
-        </header>
-
-        <!-- Main Core Dashboard Interface -->
-        <div class="shopping-container">
-            <form class="shopping-form" id="itemForm" onsubmit="addNewItem(event)">
-                <input type="text" id="itemInput" class="shopping-input" placeholder="Add an item (e.g., Milk, Bread)..." autocomplete="off">
-                <button type="submit" class="add-item-btn">+ Add</button>
-            </form>
-
-            <ul class="shopping-list" id="shoppingList">
-                <!-- Dynamically populated rows -->
+            <ul class="sidebar-menu">
+                <li><a href="index.html"><i class="fas fa-calendar-alt"></i><span class="menu-text">Calendar</span></a></li>
+                <li><a href="meals.html"><i class="fas fa-utensils"></i><span class="menu-text">Meals</span></a></li>
+                <li class="active"><a href="shopping.html"><i class="fas fa-shopping-basket"></i><span class="menu-text">Shopping List</span></a></li>
+                <li><a href="settings.html"><i class="fas fa-cog"></i><span class="menu-text">Settings</span></a></li>
             </ul>
-        </div>
-    </main>
+        </aside>
+
+        <main class="main-content">
+            <header class="content-header">
+                <div class="header-left">
+                    <button id="contentMenuToggle" class="icon-btn hide-on-desktop"><i class="fas fa-bars"></i></button>
+                    <h2>Shopping List</h2>
+                </div>
+                <div class="button-group">
+                    <button class="header-btn clear-bought-btn" onclick="clearChecked()"><i class="fas fa-trash-alt"></i> Clear Checked</button>
+                </div>
+            </header>
+
+            <section class="shopping-section" style="flex-grow: 1;">
+                <form class="shopping-form" onsubmit="addNewItem(event)">
+                    <input type="text" id="itemInput" class="shopping-input" placeholder="Add an item to the list..." autocomplete="off">
+                    <button type="submit" class="add-item-btn"><i class="fas fa-plus"></i> Add</button>
+                </form>
+
+                <ul id="shoppingList" class="shopping-list">
+                    </ul>
+            </section>
+        </main>
+    </div>
 
     <script>
-        // Sidebar controls
+        // Inline Sidebar Toggle Controller UI Handlers
         const sidebar = document.getElementById('sidebar');
         const toggleBtn = document.getElementById('sidebarToggle');
         const contentToggleBtn = document.getElementById('contentMenuToggle');
@@ -183,6 +188,7 @@
         function toggleSidebar() {
             sidebar.classList.toggle('collapsed');
         }
+
         toggleBtn.addEventListener('click', toggleSidebar);
         contentToggleBtn.addEventListener('click', toggleSidebar);
 
@@ -192,15 +198,18 @@
         function renderList() {
             const listEl = document.getElementById('shoppingList');
             listEl.innerHTML = '';
-
             shoppingItems.forEach((item, index) => {
                 const li = document.createElement('li');
                 li.className = `shopping-item ${item.checked ? 'checked' : ''}`;
                 li.onclick = () => toggleItem(index);
-
+                
                 li.innerHTML = `
-                    <i class="${item.checked ? 'fas fa-check-square' : 'far fa-square'} checkbox-icon"></i>
-                    <span class="item-text">${item.text}</span>
+                    <div class="checkbox-container">
+                        <div class="custom-checkbox">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <span class="item-text">${item.text}</span>
+                    </div>
                 `;
                 listEl.appendChild(li);
             });
@@ -210,7 +219,6 @@
             e.preventDefault();
             const input = document.getElementById('itemInput');
             const text = input.value.trim();
-            
             if (text) {
                 shoppingItems.push({ text: text, checked: false });
                 saveAndRender();
@@ -223,7 +231,7 @@
             saveAndRender();
         }
 
-        function clearCheckedItems() {
+        function clearChecked() {
             shoppingItems = shoppingItems.filter(item => !item.checked);
             saveAndRender();
         }
@@ -233,8 +241,8 @@
             renderList();
         }
 
-        // Run on initial load window cycle
-        window.onload = renderList;
+        // Initial Run load items
+        renderList();
     </script>
 </body>
 </html>
