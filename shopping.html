@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Shared Stylesheet -->
     <link rel="stylesheet" href="style.css">
+    <!-- Core Application JavaScript Framework -->
+    <script src="script.js" defer></script>
 </head>
 <body>
     <div class="dashboard-container">
@@ -28,6 +30,7 @@
 
         <!-- MAIN WORK AREA CONTENT -->
         <main class="main-content">
+            <!-- Header bar with Mobile Hamburgers & Controls -->
             <header class="content-header" style="padding: 20px; display: flex; justify-content: space-between; align-items: center;">
                 <div class="header-left">
                     <button id="contentMenuToggle" class="icon-btn hide-on-desktop"><i class="fas fa-bars"></i></button>
@@ -38,14 +41,17 @@
                 </div>
             </header>
 
+            <!-- Embedded Workspace Grid Section -->
             <section class="shopping-section">
+                <!-- New item entry forms row -->
                 <form class="shopping-form" onsubmit="addNewItem(event)">
                     <input type="text" id="itemInput" class="shopping-input" placeholder="Add an item..." autocomplete="off">
                     <button type="submit" class="add-item-btn"><i class="fas fa-plus"></i> Add</button>
                 </form>
 
+                <!-- List target rendering zone -->
                 <ul id="shoppingList" class="shopping-list">
-                    <!-- Dynamic Items render here -->
+                    <!-- Dynamic Items render via JS state engine -->
                 </ul>
             </section>
         </main>
@@ -53,17 +59,7 @@
     </div>
 
     <script>
-        const sidebar = document.getElementById('sidebar');
-        const toggleBtn = document.getElementById('sidebarToggle');
-        const contentToggleBtn = document.getElementById('contentMenuToggle');
-
-        function toggleSidebar() {
-            sidebar.classList.toggle('collapsed');
-        }
-
-        if (toggleBtn) toggleBtn.addEventListener('click', toggleSidebar);
-        if (contentToggleBtn) contentToggleBtn.addEventListener('click', toggleSidebar);
-
+        // Core List Application State Logic
         let shoppingItems = JSON.parse(localStorage.getItem('familyShoppingItems')) || [];
 
         function renderList() {
@@ -110,6 +106,7 @@
             renderList();
         }
 
+        // Initialize view layout
         renderList();
     </script>
 </body>

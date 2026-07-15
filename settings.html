@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Shared Stylesheet -->
     <link rel="stylesheet" href="style.css">
+    <!-- Core Application JavaScript Framework -->
+    <script src="script.js" defer></script>
 </head>
 <body>
     <div class="dashboard-container">
@@ -43,19 +45,5 @@
         </main>
 
     </div>
-
-    <script>
-        // Sidebar Collapsing Logic
-        const sidebar = document.getElementById('sidebar');
-        const toggleBtn = document.getElementById('sidebarToggle');
-        const contentToggleBtn = document.getElementById('contentMenuToggle');
-
-        function toggleSidebar() {
-            sidebar.classList.toggle('collapsed');
-        }
-
-        if (toggleBtn) toggleBtn.addEventListener('click', toggleSidebar);
-        if (contentToggleBtn) contentToggleBtn.addEventListener('click', toggleSidebar);
-    </script>
 </body>
 </html>

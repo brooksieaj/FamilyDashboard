@@ -563,3 +563,31 @@ window.onload = () => {
         updateSettingsUI(false);
     }
 };
+
+// ==========================================
+// PERSISTENT SIDEBAR STATE ENGINE CONTROLLER
+// ==========================================
+document.addEventListener("DOMContentLoaded", () => {
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('sidebarToggle');
+    const contentToggleBtn = document.getElementById('contentMenuToggle');
+
+    // 1. Instantly restore saved drawer configurations upon navigation loads
+    const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+    if (isCollapsed) {
+        sidebar.classList.add('collapsed');
+    } else {
+        sidebar.classList.remove('collapsed');
+    }
+
+    // 2. State-persisting runtime navigation layout mutator
+    function toggleSidebar() {
+        sidebar.classList.toggle('collapsed');
+        // Commit state layout selection to local memory
+        localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+    }
+
+    // 3. Attach standard click listeners safely where views support them
+    if (toggleBtn) toggleBtn.addEventListener('click', toggleSidebar);
+    if (contentToggleBtn) contentToggleBtn.addEventListener('click', toggleSidebar);
+});
