@@ -3,46 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Family Hub - Meals</title>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Shared Stylesheet -->
+    <title>Family Board - Meals</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Shared Core Application Script -->
-    <script src="script.js" defer></script>
+    <!-- FontAwesome for matching dashboard icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+
+    <!-- Unified Flex Structural Wrapper -->
     <div class="dashboard-container">
-        
-        <!-- SIDEBAR NAVIGATION DRAWER -->
-        <aside id="sidebar" class="sidebar">
+
+        <!-- Retractable Side Menu -->
+        <nav id="sidebar" class="sidebar collapsed">
             <div class="sidebar-header">
                 <button id="sidebarToggle" class="icon-btn"><i class="fas fa-bars"></i></button>
-                <span class="sidebar-title menu-text">Family Hub</span>
+                <span class="sidebar-title">Family Hub</span>
             </div>
             <ul class="sidebar-menu">
-                <li><a href="index.html"><i class="fas fa-calendar-alt"></i><span class="menu-text">Calendar</span></a></li>
-                <li class="active"><a href="meals.html"><i class="fas fa-utensils"></i><span class="menu-text">Meals</span></a></li>
-                <li><a href="shopping.html"><i class="fas fa-shopping-basket"></i><span class="menu-text">Shopping List</span></a></li>
-                <li><a href="settings.html"><i class="fas fa-cog"></i><span class="menu-text">Settings</span></a></li>
+                <li>
+                    <a href="index.html">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span class="menu-text">Calendar</span>
+                    </a>
+                </li>
+                <li class="active">
+                    <a href="meals.html">
+                        <i class="fas fa-utensils"></i>
+                        <span class="menu-text">Meals</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="shopping.html">
+                        <i class="fas fa-shopping-basket"></i>
+                        <span class="menu-text">Shopping List</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="settings.html">
+                        <i class="fas fa-cog"></i>
+                        <span class="menu-text">Settings</span>
+                    </a>
+                </li>
             </ul>
-        </aside>
+        </nav>
 
-        <!-- MAIN WORK AREA CONTENT -->
-        <main class="main-content">
-            <header class="content-header" style="padding: 20px; display: flex; align-items: center; gap: 12px;">
-                <button id="contentMenuToggle" class="icon-btn hide-on-desktop"><i class="fas fa-bars"></i></button>
-                <h1>Meal Planner</h1>
+        <!-- Main Content Area -->
+        <main class="main-content" style="height: 100vh; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column;">
+            <header class="controls" style="margin-bottom: 15px; flex-shrink: 0;">
+                <div class="header-left">
+                    <button id="contentMenuToggle" class="icon-btn hide-on-desktop"><i class="fas fa-bars"></i></button>
+                    <h1>Meal Planner</h1>
+                </div>
+                <div class="button-group">
+                    <!-- Cleaned: Removed inline onclick attribute -->
+                    <button id="clearAllMealsBtn" class="clear-btn"><i class="fas fa-trash-alt" style="margin-right: 8px;"></i>Clear All</button>
+                </div>
             </header>
 
-            <section style="padding: 20px;">
-                <div class="blank-state-card">
-                    <span class="placeholder-icon"><i class="fas fa-utensils"></i></span>
-                    <p>Meal Planning Tools Coming Soon.</p>
+            <!-- Horizontally Stacked Day Rows -->
+            <div class="meal-rows-container">
+                <!-- Monday -->
+                <div class="meal-row-card">
+                    <h3 class="meal-day-label">Monday</h3>
+                    <div class="meal-input-container">
+                        <input type="text" id="meal-monday" class="meal-input" placeholder="Tap to add dinner plan...">
+                    </div>
                 </div>
-            </section>
+                <!-- Tuesday -->
+                <div class="meal-row-card">
+                    <h3 class="meal-day-label">Tuesday</h3>
+                    <div class="meal-input-container">
+                        <input type="text" id="meal-tuesday" class="meal-input" placeholder="Tap to add dinner plan...">
+                    </div>
+                </div>
+                <!-- Wednesday -->
+                <div class="meal-row-card">
+                    <h3 class="meal-day-label">Wednesday</h3>
+                    <div class="meal-input-container">
+                        <input type="text" id="meal-wednesday" class="meal-input" placeholder="Tap to add dinner plan...">
+                    </div>
+                </div>
+                <!-- Thursday -->
+                <div class="meal-row-card">
+                    <h3 class="meal-day-label">Thursday</h3>
+                    <div class="meal-input-container">
+                        <input type="text" id="meal-thursday" class="meal-input" placeholder="Tap to add dinner plan...">
+                    </div>
+                </div>
+                <!-- Friday -->
+                <div class="meal-row-card">
+                    <h3 class="meal-day-label">Friday</h3>
+                    <div class="meal-input-container">
+                        <input type="text" id="meal-friday" class="meal-input" placeholder="Tap to add dinner plan...">
+                    </div>
+                </div>
+                <!-- Saturday -->
+                <div class="meal-row-card">
+                    <h3 class="meal-day-label">Saturday</h3>
+                    <div class="meal-input-container">
+                        <input type="text" id="meal-saturday" class="meal-input" placeholder="Tap to add dinner plan...">
+                    </div>
+                </div>
+                <!-- Sunday -->
+                <div class="meal-row-card">
+                    <h3 class="meal-day-label">Sunday</h3>
+                    <div class="meal-input-container">
+                        <input type="text" id="meal-sunday" class="meal-input" placeholder="Tap to add dinner plan...">
+                    </div>
+                </div>
+            </div>
         </main>
-
+        
     </div>
+
+    <!-- Interface Controller Linkage -->
+    <script src="script.js"></script>
 </body>
 </html>

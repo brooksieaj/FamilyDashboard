@@ -533,3 +533,94 @@ body {
     font-weight: 600;
     color: #333;
 }
+
+/* ==========================================
+   8. MEAL PLANNER SPECIFIC APPLICATION WORKSPACE
+   ========================================== */
+.meal-rows-container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background-color: #ddd;
+    border: 2px solid #333;
+    border-radius: 8px;
+    flex-grow: 1;
+    padding: 4px;
+    box-sizing: border-box;
+}
+
+.meal-row-card {
+    background: white;
+    display: flex;
+    align-items: stretch;
+    flex-grow: 1;
+    box-sizing: border-box;
+}
+
+.meal-row-card:first-child {
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+.meal-row-card:first-child .meal-day-label {
+    border-top-left-radius: 4px;
+}
+
+.meal-row-card:last-child {
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+.meal-row-card:last-child .meal-day-label {
+    border-bottom-left-radius: 4px;
+}
+
+.meal-day-label {
+    font-weight: bold;
+    font-size: 1.6rem; 
+    color: white;
+    background-color: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 180px; 
+    margin: 0;
+    padding: 0 15px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.meal-input-container {
+    flex-grow: 1;
+    display: flex;
+    align-items: center; 
+    background-color: #f0f2f5;
+    padding: 0 20px;
+}
+
+.meal-input {
+    width: 100%;
+    border: 1px dashed #ccc;
+    border-radius: 6px; 
+    padding: 12px 16px;
+    font-family: inherit;
+    font-size: 1.4rem; 
+    font-weight: 600;
+    outline: none;
+    box-sizing: border-box;
+    background-color: #ffffff;
+    transition: all 0.2s ease;
+}
+
+.meal-input:focus {
+    border: 2px solid #4285f4;
+    box-shadow: 0 0 8px rgba(66, 133, 244, 0.2);
+}
+
+.clear-btn {
+    background-color: #db4437;
+    font-size: 1.1rem;
+    padding: 10px 20px;
+}
+
+.clear-btn:hover {
+    background-color: #c53929;
+}

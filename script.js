@@ -588,3 +588,51 @@ if (document.readyState === 'loading') {
 } else {
     setupSidebarBehavior();
 }
+
+/* ==========================================
+   9. MEAL PLANNER ENGINE (PAGE SPECIFIC)
+   ========================================== */
+function initMealPlannerEngine() {
+    const mealContainer = document.querySelector('.meal-rows-container');
+    if (!mealContainer) return; // Exit cleanly if loaded on non-meal sub-pages
+
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
+    // 1. Ingest existing states and assign auto-saving event tracks
+    days.forEach(day => {
+        const inputField = document.getElementById(`meal-${day}`);
+        if (!inputField) return;
+        
+        const savedMeal = localStorage.getItem(`familyMeal_${day}`);
+        if (savedMeal) {
+            inputField.value = savedMeal;
+        }
+
+        inputField.addEventListener('input', (e) => {
+            localStorage.setItem(`familyMeal_${day}`, e.target.value);
+        });
+    });
+
+    // 2. Clear All Engine mapping using explicit DOM binding
+    const clearBtn = document.getElementById('clearAllMealsBtn');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            if (confirm("Are you sure you want to clear the entire week's meal plan? This cannot be undone.")) {
+                days.forEach(day => {
+                    const inputField = document.getElementById(`meal-${day}`);
+                    if (inputField) {
+                        inputField.value = '';
+                        localStorage.removeItem(`familyMeal_${day}`);
+                    }
+                });
+            }
+        });
+    }
+}
+
+// Intercept your master entry runtime pipeline to initialize components safely
+const coreDashboardOnload = window.onload;
+window.onload = () => {
+    if (typeof coreDashboardOnload === 'function') coreDashboardOnload();
+    initMealPlannerEngine();
+};
