@@ -92,6 +92,7 @@ function gisLoaded() {
     }
 }
 
+// Ensure trigger button elements exist before dynamically reading standard handlers
 function handleAuthClick() {
     tokenClient.requestAccessToken({ prompt: 'consent' });
 }
@@ -556,13 +557,21 @@ function setupSidebarBehavior() {
 
     if (!sidebar) return;
 
-    // Check saved local memory layout state immediately before parsing slower API assets
+    // 1. Temporarily freeze CSS width transitions to prevent visual layout snap frames
+    sidebar.classList.add('no-transition');
+
+    // 2. Read saved local memory layout state immediately before parsing slower API assets
     const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
     if (isCollapsed) {
         sidebar.classList.add('collapsed');
     } else {
         sidebar.classList.remove('collapsed');
     }
+
+    // 3. Force a quick browser layout calculation to lock state, then restore animations smoothly
+    requestAnimationFrame(() => {
+        sidebar.classList.remove('no-transition');
+    });
 
     function toggleSidebar() {
         sidebar.classList.toggle('collapsed');

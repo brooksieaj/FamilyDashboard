@@ -239,7 +239,8 @@ body {
     border-right: 1px solid #e0e2e6;
     display: flex;
     flex-direction: column;
-    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Updated smoothly for width adjustments while preparing hooks for preload states */
+    transition: width 0.3s ease, min-width 0.3s ease;
     flex-shrink: 0;
     z-index: 1000;
 }
@@ -342,6 +343,11 @@ body {
 .sidebar.collapsed .menu-text {
     opacity: 0;
     pointer-events: none;
+}
+
+/* Add this class to completely block layout snapping animations during setup */
+.no-transition {
+    transition: none !important;
 }
 
 /* Main Content Workspace Panes */
