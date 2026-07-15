@@ -3,249 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Family Board - Meals</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- FontAwesome for matching dashboard icons -->
+    <title>Family Hub - Meals</title>
+    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        /* Meal Specific Horizontal Layout Constraints */
-        .meal-rows-container {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            background-color: #ddd;
-            border: 2px solid #333;
-            border-radius: 8px; /* Smooth all-around corners */
-            flex-grow: 1;
-            padding: 4px;
-            box-sizing: border-box;
-        }
-
-        .meal-row-card {
-            background: white;
-            display: flex;
-            align-items: stretch;
-            flex-grow: 1;
-            box-sizing: border-box;
-        }
-
-        /* Round the top corners of the very first row element */
-        .meal-row-card:first-child {
-            border-top-left-radius: 4px;
-            border-top-right-radius: 4px;
-        }
-        .meal-row-card:first-child .meal-day-label {
-            border-top-left-radius: 4px;
-        }
-
-        /* Round the bottom corners of the very last row element */
-        .meal-row-card:last-child {
-            border-bottom-left-radius: 4px;
-            border-bottom-right-radius: 4px;
-        }
-        .meal-row-card:last-child .meal-day-label {
-            border-bottom-left-radius: 4px;
-        }
-
-        .meal-day-label {
-            font-weight: bold;
-            font-size: 1.6rem; 
-            color: white;
-            background-color: #333;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 180px; 
-            margin: 0;
-            padding: 0 15px;
-            text-align: center;
-            flex-shrink: 0;
-        }
-
-        /* Input field container using the signature grey app framework color */
-        .meal-input-container {
-            flex-grow: 1;
-            display: flex;
-            align-items: center; 
-            background-color: #f0f2f5; /* Clean Grey Dashboard Background */
-            padding: 0 20px;
-        }
-
-        .meal-input {
-            width: 100%;
-            border: 1px dashed #ccc;
-            border-radius: 6px; 
-            padding: 12px 16px;
-            font-family: inherit;
-            font-size: 1.4rem; 
-            font-weight: 600;
-            outline: none;
-            box-sizing: border-box;
-            background-color: #ffffff;
-            transition: all 0.2s ease;
-        }
-
-        .meal-input:focus {
-            border: 2px solid #4285f4;
-            box-shadow: 0 0 8px rgba(66, 133, 244, 0.2);
-        }
-        
-        .clear-btn {
-            background-color: #db4437;
-            font-size: 1.1rem;
-            padding: 10px 20px;
-        }
-        
-        .clear-btn:hover {
-            background-color: #c53929;
-        }
-    </style>
+    <!-- Shared Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Shared Core Application Script -->
+    <script src="script.js" defer></script>
 </head>
 <body>
+    <div class="dashboard-container">
+        
+        <!-- SIDEBAR NAVIGATION DRAWER -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <button id="sidebarToggle" class="icon-btn"><i class="fas fa-bars"></i></button>
+                <span class="sidebar-title menu-text">Family Hub</span>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="index.html"><i class="fas fa-calendar-alt"></i><span class="menu-text">Calendar</span></a></li>
+                <li class="active"><a href="meals.html"><i class="fas fa-utensils"></i><span class="menu-text">Meals</span></a></li>
+                <li><a href="shopping.html"><i class="fas fa-shopping-basket"></i><span class="menu-text">Shopping List</span></a></li>
+                <li><a href="settings.html"><i class="fas fa-cog"></i><span class="menu-text">Settings</span></a></li>
+            </ul>
+        </aside>
 
-    <!-- Retractable Side Menu -->
-    <nav id="sidebar" class="sidebar collapsed">
-        <div class="sidebar-header">
-            <button id="sidebarToggle" class="icon-btn"><i class="fas fa-bars"></i></button>
-            <span class="sidebar-title">Family Hub</span>
-        </div>
-        <ul class="sidebar-menu">
-            <li>
-                <a href="index.html">
-                    <i class="fas fa-calendar-alt"></i>
-                    <span class="menu-text">Calendar</span>
-                </a>
-            </li>
-            <li class="active">
-                <a href="meals.html">
-                    <i class="fas fa-utensils"></i>
-                    <span class="menu-text">Meals</span>
-                </a>
-            </li>
-            <li>
-                <a href="shopping.html">
-                    <i class="fas fa-shopping-basket"></i>
-                    <span class="menu-text">Shopping List</span>
-                </a>
-            </li>
-            <li>
-                <a href="settings.html">
-                    <i class="fas fa-cog"></i>
-                    <span class="menu-text">Settings</span>
-                </a>
-            </li>
-        </ul>
-    </nav>
-
-    <!-- Main Content Area -->
-    <main class="main-content" style="height: 100vh; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column;">
-        <header class="controls" style="margin-bottom: 15px; flex-shrink: 0;">
-            <div class="header-left">
+        <!-- MAIN WORK AREA CONTENT -->
+        <main class="main-content">
+            <header class="content-header" style="padding: 20px; display: flex; align-items: center; gap: 12px;">
                 <button id="contentMenuToggle" class="icon-btn hide-on-desktop"><i class="fas fa-bars"></i></button>
                 <h1>Meal Planner</h1>
-            </div>
-            <div class="button-group">
-                <button class="clear-btn" onclick="clearAllMeals()"><i class="fas fa-trash-alt" style="margin-right: 8px;"></i>Clear All</button>
-            </div>
-        </header>
+            </header>
 
-        <!-- Horizontally Stacked Day Rows -->
-        <div class="meal-rows-container">
-            <!-- Monday -->
-            <div class="meal-row-card">
-                <h3 class="meal-day-label">Monday</h3>
-                <div class="meal-input-container">
-                    <input type="text" id="meal-monday" class="meal-input" placeholder="Tap to add dinner plan...">
+            <section style="padding: 20px;">
+                <div class="blank-state-card">
+                    <span class="placeholder-icon"><i class="fas fa-utensils"></i></span>
+                    <p>Meal Planning Tools Coming Soon.</p>
                 </div>
-            </div>
-            <!-- Tuesday -->
-            <div class="meal-row-card">
-                <h3 class="meal-day-label">Tuesday</h3>
-                <div class="meal-input-container">
-                    <input type="text" id="meal-tuesday" class="meal-input" placeholder="Tap to add dinner plan...">
-                </div>
-            </div>
-            <!-- Wednesday -->
-            <div class="meal-row-card">
-                <h3 class="meal-day-label">Wednesday</h3>
-                <div class="meal-input-container">
-                    <input type="text" id="meal-wednesday" class="meal-input" placeholder="Tap to add dinner plan...">
-                </div>
-            </div>
-            <!-- Thursday -->
-            <div class="meal-row-card">
-                <h3 class="meal-day-label">Thursday</h3>
-                <div class="meal-input-container">
-                    <input type="text" id="meal-thursday" class="meal-input" placeholder="Tap to add dinner plan...">
-                </div>
-            </div>
-            <!-- Friday -->
-            <div class="meal-row-card">
-                <h3 class="meal-day-label">Friday</h3>
-                <div class="meal-input-container">
-                    <input type="text" id="meal-friday" class="meal-input" placeholder="Tap to add dinner plan...">
-                </div>
-            </div>
-            <!-- Saturday -->
-            <div class="meal-row-card">
-                <h3 class="meal-day-label">Saturday</h3>
-                <div class="meal-input-container">
-                    <input type="text" id="meal-saturday" class="meal-input" placeholder="Tap to add dinner plan...">
-                </div>
-            </div>
-            <!-- Sunday -->
-            <div class="meal-row-card">
-                <h3 class="meal-day-label">Sunday</h3>
-                <div class="meal-input-container">
-                    <input type="text" id="meal-sunday" class="meal-input" placeholder="Tap to add dinner plan...">
-                </div>
-            </div>
-        </div>
-    </main>
+            </section>
+        </main>
 
-    <script>
-        // Sidebar Navigation controls
-        const sidebar = document.getElementById('sidebar');
-        const toggleBtn = document.getElementById('sidebarToggle');
-        const contentToggleBtn = document.getElementById('contentMenuToggle');
-
-        function toggleSidebar() {
-            sidebar.classList.toggle('collapsed');
-        }
-
-        toggleBtn.addEventListener('click', toggleSidebar);
-        contentToggleBtn.addEventListener('click', toggleSidebar);
-
-        // Days Config array using the full name strings
-        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-
-        window.onload = () => {
-            days.forEach(day => {
-                const inputField = document.getElementById(`meal-${day}`);
-                
-                // Load saved plan if it exists
-                const savedMeal = localStorage.getItem(`familyMeal_${day}`);
-                if (savedMeal) {
-                    inputField.value = savedMeal;
-                }
-
-                // Auto-save engine
-                inputField.addEventListener('input', (e) => {
-                    localStorage.setItem(`familyMeal_${day}`, e.target.value);
-                });
-            });
-        };
-
-        // Clear All Functionality with Warning Popup
-        function clearAllMeals() {
-            if (confirm("Are you sure you want to clear the entire week's meal plan? This cannot be undone.")) {
-                days.forEach(day => {
-                    const inputField = document.getElementById(`meal-${day}`);
-                    inputField.value = '';
-                    localStorage.removeItem(`familyMeal_${day}`);
-                });
-            }
-        }
-    </script>
+    </div>
 </body>
 </html>

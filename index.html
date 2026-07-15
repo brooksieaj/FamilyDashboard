@@ -3,117 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Family Board Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Family Hub - Calendar</title>
+    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Shared Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Shared Core Application Script -->
+    <script src="script.js" defer></script>
 </head>
 <body>
+    <div class="dashboard-container">
+        
+        <!-- SIDEBAR NAVIGATION DRAWER -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <button id="sidebarToggle" class="icon-btn"><i class="fas fa-bars"></i></button>
+                <span class="sidebar-title menu-text">Family Hub</span>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="active"><a href="index.html"><i class="fas fa-calendar-alt"></i><span class="menu-text">Calendar</span></a></li>
+                <li><a href="meals.html"><i class="fas fa-utensils"></i><span class="menu-text">Meals</span></a></li>
+                <li><a href="shopping.html"><i class="fas fa-shopping-basket"></i><span class="menu-text">Shopping List</span></a></li>
+                <li><a href="settings.html"><i class="fas fa-cog"></i><span class="menu-text">Settings</span></a></li>
+            </ul>
+        </aside>
 
-    <!-- Retractable Side Menu -->
-    <nav id="sidebar" class="sidebar collapsed">
-        <div class="sidebar-header">
-            <button id="sidebarToggle" class="icon-btn"><i class="fas fa-bars"></i></button>
-            <span class="sidebar-title">Family Hub</span>
-        </div>
-        <ul class="sidebar-menu">
-            <li class="active">
-                <a href="index.html">
-                    <i class="fas fa-calendar-alt"></i>
-                    <span class="menu-text">Calendar</span>
-                </a>
-            </li>
-            <li>
-                <a href="meals.html">
-                    <i class="fas fa-utensils"></i>
-                    <span class="menu-text">Meals</span>
-                </a>
-            </li>
-            <li>
-                <a href="shopping.html">
-                    <i class="fas fa-shopping-basket"></i>
-                    <span class="menu-text">Shopping List</span>
-                </a>
-            </li>
-            <li>
-                <a href="settings.html">
-                    <i class="fas fa-cog"></i>
-                    <span class="menu-text">Settings</span>
-                </a>
-            </li>
-        </ul>
-    </nav>
+        <!-- MAIN WORK AREA CONTENT -->
+        <main class="main-content">
+            <header class="content-header" style="padding: 20px; display: flex; align-items: center; gap: 12px;">
+                <button id="contentMenuToggle" class="icon-btn hide-on-desktop"><i class="fas fa-bars"></i></button>
+                <h1>Family Calendar</h1>
+            </header>
 
-    <!-- Main Content Area Wrapper -->
-    <main class="main-content">
-        <section class="calendar-section">
-            <div class="controls">
-                <div class="header-left">
-                    <button id="contentMenuToggle" class="icon-btn hide-on-desktop"><i class="fas fa-bars"></i></button>
-                    <h1>Calendar</h1>
-                </div>
-                <div class="button-group">
-                    <div id="countdown-widget" class="hidden" onclick="openCountdownModal()">
-                        <div id="widget-label">Countdown</div>
-                        <div id="widget-timer">00d 00h 00m 00s</div>
+            <!-- Calendar Grid Frame Workspace -->
+            <section class="calendar-section">
+                <div class="controls">
+                    <div class="button-group">
+                        <button id="prevMonthBtn">Previous</button>
+                        <button id="nextMonthBtn" style="margin-left: 10px;">Next</button>
                     </div>
-                    <button id="add-countdown-btn" style="margin-right: 10px; background-color: #fc6a03;" onclick="openCountdownModal()">+ Countdown</button>
-                    <button style="margin-right: 10px;" onclick="openEventModal()">+ Add Event</button>
+                    <span id="monthYearDisplay" style="font-size: 1.5rem; font-weight: bold; color: #333;"></span>
+                    <button id="addEventBtn"><i class="fas fa-plus"></i> Add Event</button>
                 </div>
-            </div>
 
-            <div class="calendar-header">
-                <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
-            </div>
-            
-            <div id="calendar-grid" class="calendar-grid">
-                <!-- JS dynamically injects grid cells here -->
-            </div>
-        </section>
-    </main>
+                <div class="calendar-header">
+                    <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+                </div>
+                <div id="calendarGrid" class="calendar-grid">
+                    <!-- Days loaded dynamically -->
+                </div>
+            </section>
+        </main>
 
-    <!-- Event/Modal Overlay Structure -->
-    <div id="eventModal" class="modal">
-        <div class="modal-content">
-            <h2 id="modalTitle">Add Family Event</h2>
-            
-            <label for="eventSummary">Event Name:</label>
-            <input type="text" id="eventSummary">
-            
-            <div id="calendar-select-group">
-                <label for="eventCalendar">Calendar:</label>
-                <select id="eventCalendar"></select>
-            </div>
-            
-            <label for="eventDate">Date:</label>
-            <input type="date" id="eventDate">
-            
-            <label for="eventTime">Time:</label>
-            <input type="time" id="eventTime">
-            
-            <div class="modal-buttons">
-                <button id="deleteEventBtn" onclick="deleteEvent()">Delete</button>
-                <button style="background-color: #aaa;" onclick="closeEventModal()">Cancel</button>
-                <button onclick="submitEvent()">Save</button>
-            </div>
-        </div>
     </div>
-
-    <!-- Scripts -->
-    <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
-    <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
-    <script src="script.js"></script>
-    <script>
-        // Sidebar collapse control logic
-        const sidebar = document.getElementById('sidebar');
-        const toggleBtn = document.getElementById('sidebarToggle');
-        const contentToggleBtn = document.getElementById('contentMenuToggle');
-
-        function toggleSidebar() {
-            sidebar.classList.toggle('collapsed');
-        }
-
-        toggleBtn.addEventListener('click', toggleSidebar);
-        contentToggleBtn.addEventListener('click', toggleSidebar);
-    </script>
 </body>
 </html>

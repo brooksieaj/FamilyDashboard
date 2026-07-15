@@ -164,16 +164,6 @@ function fetchWeatherData() {
         });
 }
 
-function getWeatherIcon(code) {
-    if (code === 0) return '☀️';
-    if ([1, 2, 3].includes(code)) return '⛅';
-    if ([45, 48].includes(code)) return '🌫️';
-    if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) return '🌧️';
-    if ([71, 73, 75, 77, 85, 86].includes(code)) return '❄️';
-    if ([95, 96, 99].includes(code)) return '⛈️';
-    return '✨';
-}
-
 /* ==========================================
    4. DATA INGESTION (GOOGLE CALENDAR API)
    ========================================== */
@@ -551,9 +541,8 @@ function openCountdownModal() {
 /* ==========================================
    8. CORE ONLOAD RUNTIME SETUP
    ========================================== */
-const existingOnload = window.onload;
-window.onload = () => {
-    if (typeof existingOnload === 'function') existingOnload();
+// Combined unified DOM controller to handle initialization safely without layout shifts
+function runtimeInitEngine() {
     initCountdown();
     
     // Check if a valid, unexpired token exists or session is active to display UI correctly
@@ -562,32 +551,36 @@ window.onload = () => {
     } else {
         updateSettingsUI(false);
     }
-};
 
-// ==========================================
-// PERSISTENT SIDEBAR STATE ENGINE CONTROLLER
-// ==========================================
-document.addEventListener("DOMContentLoaded", () => {
+    // PERSISTENT SIDEBAR INNER PROCESSOR
     const sidebar = document.getElementById('sidebar');
     const toggleBtn = document.getElementById('sidebarToggle');
     const contentToggleBtn = document.getElementById('contentMenuToggle');
 
-    // 1. Instantly restore saved drawer configurations upon navigation loads
-    const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-    if (isCollapsed) {
-        sidebar.classList.add('collapsed');
-    } else {
-        sidebar.classList.remove('collapsed');
-    }
+    if (sidebar) {
+        // Instantly restore saved drawer configurations upon navigation loads
+        const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        if (isCollapsed) {
+            sidebar.classList.add('collapsed');
+        } else {
+            sidebar.classList.remove('collapsed');
+        }
 
-    // 2. State-persisting runtime navigation layout mutator
-    function toggleSidebar() {
-        sidebar.classList.toggle('collapsed');
-        // Commit state layout selection to local memory
-        localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-    }
+        // State-persisting runtime navigation layout mutator
+        function toggleSidebar() {
+            sidebar.classList.toggle('collapsed');
+            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+        }
 
-    // 3. Attach standard click listeners safely where views support them
-    if (toggleBtn) toggleBtn.addEventListener('click', toggleSidebar);
-    if (contentToggleBtn) contentToggleBtn.addEventListener('click', toggleSidebar);
-});
+        // Attach standard click listeners safely where views support them
+        if (toggleBtn) toggleBtn.onclick = toggleSidebar;
+        if (contentToggleBtn) contentToggleBtn.onclick = toggleSidebar;
+    }
+}
+
+// Bind to window onload safely
+const existingOnload = window.onload;
+window.onload = () => {
+    if (typeof existingOnload === 'function') existingOnload();
+    runtimeInitEngine();
+};

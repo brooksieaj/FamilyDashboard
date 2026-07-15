@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Shared Stylesheet -->
     <link rel="stylesheet" href="style.css">
-    <!-- Core Application JavaScript Framework -->
+    <!-- Shared Core Application Script -->
     <script src="script.js" defer></script>
 </head>
 <body>
@@ -30,7 +30,6 @@
 
         <!-- MAIN WORK AREA CONTENT -->
         <main class="main-content">
-            <!-- Header bar with Mobile Hamburgers & Controls -->
             <header class="content-header" style="padding: 20px; display: flex; justify-content: space-between; align-items: center;">
                 <div class="header-left">
                     <button id="contentMenuToggle" class="icon-btn hide-on-desktop"><i class="fas fa-bars"></i></button>
@@ -41,17 +40,14 @@
                 </div>
             </header>
 
-            <!-- Embedded Workspace Grid Section -->
             <section class="shopping-section">
-                <!-- New item entry forms row -->
                 <form class="shopping-form" onsubmit="addNewItem(event)">
                     <input type="text" id="itemInput" class="shopping-input" placeholder="Add an item..." autocomplete="off">
                     <button type="submit" class="add-item-btn"><i class="fas fa-plus"></i> Add</button>
                 </form>
 
-                <!-- List target rendering zone -->
                 <ul id="shoppingList" class="shopping-list">
-                    <!-- Dynamic Items render via JS state engine -->
+                    <!-- Dynamic Items render here -->
                 </ul>
             </section>
         </main>
@@ -106,7 +102,6 @@
             renderList();
         }
 
-        // Initialize view layout
         renderList();
     </script>
 </body>
