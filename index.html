@@ -43,13 +43,14 @@
                         <button id="nextMonthBtn" style="margin-left: 10px;">Next</button>
                     </div>
                     <span id="monthYearDisplay" style="font-size: 1.5rem; font-weight: bold; color: #333;"></span>
-                    <button id="addEventBtn"><i class="fas fa-plus"></i> Add Event</button>
+                    <button id="addEventBtn" onclick="openEventModal()"><i class="fas fa-plus"></i> Add Event</button>
                 </div>
 
                 <div class="calendar-header">
                     <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
                 </div>
-                <div id="calendarGrid" class="calendar-grid">
+                <!-- FIXED ID HERE TO MATCH SCRIPT NAVIGATION PIPELINE -->
+                <div id="calendar-grid" class="calendar-grid">
                     <!-- Days loaded dynamically -->
                 </div>
             </section>

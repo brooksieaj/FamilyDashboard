@@ -144,7 +144,6 @@ function updateSettingsUI(isConnected) {
    3. WEATHER SYNC DATA PIPE
    ========================================== */
 function fetchWeatherData() {
-    // Hardcoded to Safety Bay/Rockingham area constraints
     fetch('https://api.open-meteo.com/v1/forecast?latitude=-32.3044&longitude=115.7119&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Australia%2FPerth')
         .then(response => response.json())
         .then(data => {
@@ -160,7 +159,7 @@ function fetchWeatherData() {
         })
         .catch(err => {
             console.error("Weather data pipeline error:", err);
-            fetchCalendarEvents(); // Fallback to list rendering gracefully
+            fetchCalendarEvents(); 
         });
 }
 
@@ -170,7 +169,7 @@ function fetchWeatherData() {
 function fetchCalendarEvents() {
     const startOfWeek = getMonday(new Date());
     const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 42); // Fetch 42 days (6 weeks) to fill out the grid grid canvas
+    endOfWeek.setDate(startOfWeek.getDate() + 42); 
 
     const timeMin = startOfWeek.toISOString();
     const timeMax = endOfWeek.toISOString();
@@ -224,38 +223,33 @@ function renderCalendarGrid(events) {
 
     const monday = getMonday(new Date());
 
-    // Loop exactly 42 times to build a complete 6-week view grid (6 rows * 7 columns)
     for (let i = 0; i < 42; i++) {
         const currentDay = new Date(monday);
         currentDay.setDate(monday.getDate() + i);
         const dateString = formatDateString(currentDay);
 
-        // 1. Create the day cell container (Matches original CSS class: .day-cell)
         const cell = document.createElement('div');
         cell.className = 'day-cell';
         
-        // Match system date to mark current day layout borders
         const todayStr = formatDateString(new Date());
         if (dateString === todayStr) {
-            cell.classList.add('today-day'); // Matches original CSS class: .today-day
+            cell.classList.add('today-day'); 
         } else {
             const yesterday = new Date();
             yesterday.setHours(0,0,0,0);
             if (currentDay < yesterday) {
-                cell.classList.add('past-day'); // Matches original CSS class: .past-day
+                cell.classList.add('past-day'); 
             }
         }
 
-        // 2. Build the top row header of the day cell (Matches original CSS class: .day-top-row)
         const dayTopRow = document.createElement('div');
         dayTopRow.className = 'day-top-row';
         
         const dateLabel = document.createElement('span');
-        dateLabel.className = 'day-num'; // Matches original CSS class: .day-num
+        dateLabel.className = 'day-num'; 
         dateLabel.innerText = currentDay.getDate();
         dayTopRow.appendChild(dateLabel);
 
-        // 3. Inject weather structures natively (Matches original CSS classes: .cell-weather, .cell-temp)
         if (weatherForecast && weatherForecast[dateString]) {
             const w = weatherForecast[dateString];
             const weatherLabel = document.createElement('div');
@@ -268,13 +262,11 @@ function renderCalendarGrid(events) {
 
         cell.appendChild(dayTopRow);
 
-        // 4. Ingest and filter day specific events
         const dayEvents = events.filter(e => {
             const startStr = e.start.date || e.start.dateTime.substring(0, 10);
             return startStr === dateString;
         });
 
-        // Dynamic sorting: All-day events sort to the top, then chronological timeline sort
         dayEvents.sort((a, b) => {
             if (a.start.date && !b.start.date) return -1;
             if (!a.start.date && b.start.date) return 1;
@@ -286,19 +278,15 @@ function renderCalendarGrid(events) {
 
         dayEvents.forEach(event => {
             const evEl = document.createElement('div');
-            evEl.className = 'event'; // Matches original CSS class: .event
-            
-            // Apply background color to the card directly
+            evEl.className = 'event'; 
             evEl.style.backgroundColor = event.calendarColor;
 
-            // Handle timing displays cleanly
             let timeStr = "";
             if (event.start.dateTime) {
                 const d = new Date(event.start.dateTime);
                 timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) + " ";
             }
 
-            // Standard un-stylized markup structure matching your original style.css selectors
             evEl.innerText = `${timeStr}${event.summary}`;
             
             evEl.onclick = (e) => {
@@ -317,7 +305,6 @@ function renderCalendarGrid(events) {
    6. INTERACTIVE ACTIONS & MODALS
    ========================================== */
 function openEventModal(event = null) {
-    // Abort if not authenticated
     if (!getValidAccessToken()) {
         alert("Action Locked: Please sign in via System Settings first.");
         return;
@@ -327,6 +314,8 @@ function openEventModal(event = null) {
     const modal = document.getElementById('eventModal');
     const select = document.getElementById('eventCalendar');
     
+    if(!modal || !select) return;
+
     select.innerHTML = '';
     FAMILY_CALENDARS.forEach(cal => {
         const opt = document.createElement('option');
@@ -363,7 +352,8 @@ function openEventModal(event = null) {
 }
 
 function closeEventModal() {
-    document.getElementById('eventModal').style.display = 'none';
+    const modal = document.getElementById('eventModal');
+    if (modal) modal.style.display = 'none';
     currentEditEvent = null;
 }
 
@@ -385,7 +375,7 @@ function submitEvent() {
         start.timeZone = 'Australia/Perth';
         
         const endDateObj = new Date(`${date}T${time}:00`);
-        endDateObj.setHours(endDateObj.getHours() + 1); // Default to a clean 1-hour window block
+        endDateObj.setHours(endDateObj.getHours() + 1); 
         
         const endStr = endDateObj.getFullYear() + '-' + 
             String(endDateObj.getMonth() + 1).padStart(2, '0') + '-' + 
@@ -480,7 +470,6 @@ function openCountdownModal() {
     const target = localStorage.getItem('countdown_target_datetime');
     const label = localStorage.getItem('countdown_target_label');
     
-    // Create element structures dynamically on demand
     let modal = document.getElementById('countdownModal');
     if (!modal) {
         modal = document.createElement('div');
@@ -541,46 +530,52 @@ function openCountdownModal() {
 /* ==========================================
    8. CORE ONLOAD RUNTIME SETUP
    ========================================== */
-// Combined unified DOM controller to handle initialization safely without layout shifts
 function runtimeInitEngine() {
     initCountdown();
     
-    // Check if a valid, unexpired token exists or session is active to display UI correctly
     if (getValidAccessToken() || localStorage.getItem('google_session_active') === 'true') {
         updateSettingsUI(true);
     } else {
         updateSettingsUI(false);
     }
-
-    // PERSISTENT SIDEBAR INNER PROCESSOR
-    const sidebar = document.getElementById('sidebar');
-    const toggleBtn = document.getElementById('sidebarToggle');
-    const contentToggleBtn = document.getElementById('contentMenuToggle');
-
-    if (sidebar) {
-        // Instantly restore saved drawer configurations upon navigation loads
-        const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-        if (isCollapsed) {
-            sidebar.classList.add('collapsed');
-        } else {
-            sidebar.classList.remove('collapsed');
-        }
-
-        // State-persisting runtime navigation layout mutator
-        function toggleSidebar() {
-            sidebar.classList.toggle('collapsed');
-            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-        }
-
-        // Attach standard click listeners safely where views support them
-        if (toggleBtn) toggleBtn.onclick = toggleSidebar;
-        if (contentToggleBtn) contentToggleBtn.onclick = toggleSidebar;
-    }
 }
 
-// Bind to window onload safely
 const existingOnload = window.onload;
 window.onload = () => {
     if (typeof existingOnload === 'function') existingOnload();
     runtimeInitEngine();
 };
+
+// ==========================================
+// IMMEDIATE INSTANT SIDEBAR CONTROLLER 
+// ==========================================
+function setupSidebarBehavior() {
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('sidebarToggle');
+    const contentToggleBtn = document.getElementById('contentMenuToggle');
+
+    if (!sidebar) return;
+
+    // Check saved local memory layout state immediately before parsing slower API assets
+    const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+    if (isCollapsed) {
+        sidebar.classList.add('collapsed');
+    } else {
+        sidebar.classList.remove('collapsed');
+    }
+
+    function toggleSidebar() {
+        sidebar.classList.toggle('collapsed');
+        localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+    }
+
+    if (toggleBtn) toggleBtn.onclick = toggleSidebar;
+    if (contentToggleBtn) contentToggleBtn.onclick = toggleSidebar;
+}
+
+// Run immediately upon script load rather than waiting for structural window loops
+if (document.readyState === 'loading') {
+    document.addEventListener("DOMContentLoaded", setupSidebarBehavior);
+} else {
+    setupSidebarBehavior();
+}
