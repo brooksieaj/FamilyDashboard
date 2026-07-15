@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Family Shopping List</title>
+    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Shared Stylesheet -->
     <link rel="stylesheet" href="style.css">
     <style>
         /* Custom layout overrides specifically for the shopping list page */
@@ -143,6 +145,8 @@
 </head>
 <body>
     <div class="dashboard-container">
+        
+        <!-- SIDEBAR NAVIGATION DRAWER -->
         <aside id="sidebar" class="sidebar">
             <div class="sidebar-header">
                 <button id="sidebarToggle" class="icon-btn"><i class="fas fa-bars"></i></button>
@@ -156,7 +160,9 @@
             </ul>
         </aside>
 
+        <!-- MAIN WORK AREA CONTENT (Perfectly Separated Sibling) -->
         <main class="main-content">
+            <!-- Header bar with Mobile Hamburgers & Controls -->
             <header class="content-header">
                 <div class="header-left">
                     <button id="contentMenuToggle" class="icon-btn hide-on-desktop"><i class="fas fa-bars"></i></button>
@@ -167,16 +173,21 @@
                 </div>
             </header>
 
+            <!-- Embedded Workspace Grid Section -->
             <section class="shopping-section" style="flex-grow: 1;">
+                <!-- New item entry forms row -->
                 <form class="shopping-form" onsubmit="addNewItem(event)">
                     <input type="text" id="itemInput" class="shopping-input" placeholder="Add an item to the list..." autocomplete="off">
                     <button type="submit" class="add-item-btn"><i class="fas fa-plus"></i> Add</button>
                 </form>
 
+                <!-- List target rendering zone -->
                 <ul id="shoppingList" class="shopping-list">
-                    </ul>
+                    <!-- Javascript populates items statically here -->
+                </ul>
             </section>
         </main>
+
     </div>
 
     <script>
@@ -189,14 +200,15 @@
             sidebar.classList.toggle('collapsed');
         }
 
-        toggleBtn.addEventListener('click', toggleSidebar);
-        contentToggleBtn.addEventListener('click', toggleSidebar);
+        if (toggleBtn) toggleBtn.addEventListener('click', toggleSidebar);
+        if (contentToggleBtn) contentToggleBtn.addEventListener('click', toggleSidebar);
 
         // Core List Application State Logic
         let shoppingItems = JSON.parse(localStorage.getItem('familyShoppingItems')) || [];
 
         function renderList() {
             const listEl = document.getElementById('shoppingList');
+            if (!listEl) return;
             listEl.innerHTML = '';
             shoppingItems.forEach((item, index) => {
                 const li = document.createElement('li');
@@ -218,6 +230,7 @@
         function addNewItem(e) {
             e.preventDefault();
             const input = document.getElementById('itemInput');
+            if (!input) return;
             const text = input.value.trim();
             if (text) {
                 shoppingItems.push({ text: text, checked: false });
