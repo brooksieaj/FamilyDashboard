@@ -9,6 +9,34 @@
     <!-- Shared Stylesheet -->
     <link rel="stylesheet" href="style.css">
     <style>
+        /* CRITICAL LAYOUT FIXES: Forces side-by-side view even if external CSS is cached */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif;
+            background-color: #f1f3f4;
+        }
+
+        .dashboard-container {
+            display: flex !important; /* Force side-by-side alignment */
+            min-height: 100vh;
+            width: 100%;
+        }
+
+        .sidebar {
+            width: 250px;
+            flex-shrink: 0;
+            background: white;
+            border-right: 1px solid #e0e0e0;
+        }
+
+        .main-content {
+            flex-grow: 1; /* Takes up the remaining space on the right */
+            display: flex;
+            flex-direction: column;
+            background-color: #f1f3f4;
+        }
+
         /* Custom layout overrides specifically for the shopping list page */
         .shopping-section {
             padding: 20px;
@@ -160,7 +188,7 @@
             </ul>
         </aside>
 
-        <!-- MAIN WORK AREA CONTENT (Perfectly Separated Sibling) -->
+        <!-- MAIN WORK AREA CONTENT -->
         <main class="main-content">
             <!-- Header bar with Mobile Hamburgers & Controls -->
             <header class="content-header">
