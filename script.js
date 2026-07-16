@@ -40,69 +40,69 @@ function getValidAccessToken() {
 /* ==========================================
    2. GOOGLE API LOADING & CORE LIFECYCLE
    ========================================== */
-// Ensure this is your ONLY trigger for initialization
-window.addEventListener('DOMContentLoaded', () => {
-    setupSidebarBehavior();
-    initGoogleAuth(); 
-});
-
-function initGoogleAuth() {
-    // Wait for libraries to load
-    if (typeof gapi === 'undefined' || typeof google === 'undefined') {
-        setTimeout(initGoogleAuth, 100);
-        return;
-    }
-
+function gapiLoaded() {
     gapi.load('client', async () => {
-        await gapi.client.init({
-            discoveryDocs: [
-                'https://www.googleapis.com/discovery/v1/apis/tasks/v1/rest', 
-                'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'
-            ]
-        });
+        await gapi.client.init({});
+        await gapi.client.load('calendar', 'v3');
+        await gapi.client.load('tasks', 'v1');
+        console.log("Google Libraries Loaded");
         
-        // Initialize the Token Client with Redirect UX mode
-        tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: CLIENT_ID,
-            scope: SCOPES,
-            ux_mode: 'redirect', 
-            redirect_uri: 'https://brooksieaj.github.io/FamilyDashboard/'
-        });
-
-        // Check if we returned from a redirect with a token in the URL hash
-        const urlParams = new URLSearchParams(window.location.hash.substring(1));
-        const token = urlParams.get('access_token');
+        const activeToken = getValidAccessToken();
         
-        if (token) {
-            // Save new token from redirect
-            localStorage.setItem('google_access_token', token);
-            localStorage.setItem('google_token_expiry', Date.now() + 3600000); // 1 hour
-            localStorage.setItem('google_session_active', 'true');
-            
-            // Clean the URL to remove the token for security
-            window.history.replaceState(null, null, window.location.pathname);
-            
-            gapi.client.setToken({ access_token: token });
-            updateSettingsUI(true);
-            fetchCalendarEvents();
+        if (activeToken) {
+            gapi.client.setToken({ access_token: activeToken });
+            if (document.getElementById('calendar-grid')) {
+                fetchWeatherData();
+            }
+            if (window.syncGoogleTasks) {
+                window.syncGoogleTasks();
+            }
+        } else if (localStorage.getItem('google_session_active') === 'true' && tokenClient) {
+            // Standard silent refresh using prompt: 'none'
+            tokenClient.requestAccessToken({ prompt: 'none' }); 
         } else {
-            // Otherwise, check for an existing valid token in local storage
-            const activeToken = getValidAccessToken();
-            if (activeToken) {
-                gapi.client.setToken({ access_token: activeToken });
-                updateSettingsUI(true);
+            const grid = document.getElementById('calendar-grid');
+            if (grid) {
+                grid.innerHTML = '<div class="blank-state-card" style="grid-column: 1/-1; text-align: center; padding: 40px; color: #777;"><i class="fas fa-lock" style="font-size: 2.5rem; margin-bottom: 15px; color: #ccc;"></i><p>Sign in via Settings to view your Family Calendars.</p></div>';
             }
         }
     });
 }
 
-function handleAuthClick() {
-    if (typeof tokenClient !== 'undefined') {
-        tokenClient.requestAccessToken({ prompt: 'consent' });
-    } else {
-        alert("Google services are still initializing. Please wait a moment and try again.");
-        console.error("Token Client not yet initialized.");
+function gisLoaded() {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: SCOPES,
+        callback: (tokenResponse) => {
+            if (tokenResponse.error !== undefined) throw (tokenResponse);
+            
+            const expiryTime = Date.now() + (parseInt(tokenResponse.expires_in) * 1000);
+            localStorage.setItem('google_access_token', tokenResponse.access_token);
+            localStorage.setItem('google_token_expiry', expiryTime.toString());
+            localStorage.setItem('google_session_active', 'true');
+            
+            gapi.client.setToken({ access_token: tokenResponse.access_token });
+            updateSettingsUI(true);
+
+            if (document.getElementById('calendar-grid')) {
+                fetchWeatherData();
+            }
+            if (window.syncGoogleTasks) {
+                window.syncGoogleTasks();
+            }
+        },
+    });
+
+    if (!getValidAccessToken() && localStorage.getItem('google_session_active') === 'true') {
+        console.log("Cached token missing/expired. Requesting background refresh...");
+        // 'none' is crucial for silent background authentication
+        tokenClient.requestAccessToken({ prompt: 'none' });
     }
+}
+
+function handleAuthClick() {
+    // This triggers the popup flow which does not require a page reload
+    tokenClient.requestAccessToken({ prompt: 'consent' });
 }
 
 function handleDisconnectClick() {
