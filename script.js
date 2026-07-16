@@ -71,20 +71,37 @@ function initGoogleAuth() {
         }
     });
 
-    tokenClient = google.accounts.oauth2.initTokenClient({
+tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: CLIENT_ID,
         scope: SCOPES,
         callback: (tokenResponse) => {
-            // ... your existing token handling ...
+            if (tokenResponse.error) {
+                console.error("Token error:", tokenResponse.error);
+                return;
+            }
+            // Save token
+            localStorage.setItem('google_access_token', tokenResponse.access_token);
+            localStorage.setItem('google_token_expiry', Date.now() + (tokenResponse.expires_in * 1000));
+            localStorage.setItem('google_session_active', 'true');
+            
+            // Set the token for GAPI and update UI
+            gapi.client.setToken({ access_token: tokenResponse.access_token });
+            updateSettingsUI(true);
+            
+            // Trigger syncs
+            window.syncGoogleTasks?.();
+            fetchCalendarEvents();
         },
     });
 }
 
-
-
-// Ensure trigger button elements exist before dynamically reading standard handlers
 function handleAuthClick() {
-    tokenClient.requestAccessToken({ prompt: 'consent' });
+    if (typeof tokenClient !== 'undefined') {
+        tokenClient.requestAccessToken({ prompt: 'consent' });
+    } else {
+        alert("Google services are still initializing. Please wait a moment and try again.");
+        console.error("Token Client not yet initialized.");
+    }
 }
 
 function handleDisconnectClick() {
