@@ -109,9 +109,13 @@
         </div>
     </div>
 
-    <!-- Asynchronous Google API & Architecture Engines -->
-    <script async defer src="https://apis.google.com/js/api.js"></script>
-    <script async defer src="https://accounts.google.com/gsi/client"></script>
+    <!-- 1. Load Google Identity Services (GIS) -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
+    <!-- 2. Load Google API Client Library -->
+    <script src="https://apis.google.com/js/api.js" async defer></script>
+    
+    <!-- 3. Your logic file (script.js) -->
     <script src="script.js"></script>
 </body>
 </html>

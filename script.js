@@ -41,33 +41,34 @@ function getValidAccessToken() {
    2. GOOGLE API LOADING & CORE LIFECYCLE
    ========================================== */
 function initGoogleAuth() {
-    // Initialize GAPI client
+    // 1. Initialize GAPI client ONLY with API keys and discovery docs
     gapi.load('client', async () => {
         await gapi.client.init({
-            apiKey: API_KEY, // 
-            discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/tasks/v1/rest', 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'],
-            clientId: CLIENT_ID,
-            scope: SCOPES
+            apiKey: API_KEY, 
+            discoveryDocs: [
+                'https://www.googleapis.com/discovery/v1/apis/tasks/v1/rest', 
+                'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'
+            ]
+            // REMOVED: clientId and scope from here
         });
         
-        // Now that the client is ready, attempt to auto-login or set up UI
         const activeToken = getValidAccessToken();
         if (activeToken) {
             gapi.client.setToken({ access_token: activeToken });
             updateSettingsUI(true);
-            // If on settings page, load lists
-            if (document.getElementById('task-lists-container')) {
-                loadTaskListsForSettings();
-            }
+            if (document.getElementById('task-lists-container')) loadTaskListsForSettings();
         }
     });
 
-    // Initialize Identity Services (GIS)
+    // 2. Initialize GIS Token Client for authentication
     tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: CLIENT_ID,
         scope: SCOPES,
         callback: (tokenResponse) => {
-            // Your existing token handling logic here
+            if (tokenResponse.error) {
+                console.error(tokenResponse);
+                return;
+            }
             const expiryTime = Date.now() + (parseInt(tokenResponse.expires_in) * 1000);
             localStorage.setItem('google_access_token', tokenResponse.access_token);
             localStorage.setItem('google_token_expiry', expiryTime.toString());
