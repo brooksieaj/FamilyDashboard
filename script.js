@@ -271,8 +271,11 @@ function renderCalendarGrid(events) {
         cell.appendChild(dayTopRow);
 
         const dayEvents = events.filter(e => {
-            const startStr = e.start.date || e.start.dateTime.substring(0, 10);
-            return startStr === dateString;
+            // Determine the actual date of the event regardless of timezone offset
+            const eventDate = new Date(e.start.date || e.start.dateTime);
+            // Use the same date string format: YYYY-MM-DD
+            const eventDateStr = formatDateString(eventDate);
+            return eventDateStr === dateString;
         });
 
         dayEvents.sort((a, b) => {
