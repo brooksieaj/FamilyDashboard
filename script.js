@@ -109,19 +109,28 @@ function handleAuthClick() {
 function handleDisconnectClick() {
     if (confirm("Disconnect from Google Cloud? This will clear local tokens and disable sync features.")) {
         const token = localStorage.getItem('google_access_token');
+        
         if (token) {
-            google.accounts.oauth2.revokeToken(token, () => {
-                console.log("Google Session Revoked.");
+            // Using the specific revoke method provided by GIS
+            google.accounts.oauth2.revoke(token, () => {
+                console.log("Google session revoked successfully.");
             });
         }
         
+        // Clear local storage entries
         localStorage.removeItem('google_access_token');
         localStorage.removeItem('google_token_expiry');
         localStorage.removeItem('google_session_active');
-        gapi.client.setToken(null);
         
+        // Reset the client token
+        if (gapi.client) {
+            gapi.client.setToken(null);
+        }
+        
+        // Update the UI via the consolidated function
         updateSettingsUI(false);
         
+        // Optional: Clear calendar view
         const grid = document.getElementById('calendar-grid');
         if (grid) {
             grid.innerHTML = '<div class="blank-state-card" style="grid-column: 1/-1; text-align: center; padding: 40px; color: #777;"><i class="fas fa-lock" style="font-size: 2.5rem; margin-bottom: 15px; color: #ccc;"></i><p>Sign in via Settings to view your Family Calendars.</p></div>';
