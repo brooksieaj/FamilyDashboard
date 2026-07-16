@@ -37,20 +37,29 @@ window.gapiLoaded = async function() {
 window.gisLoaded = function() {
     console.log("GIS loading...");
     tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: CLIENT_ID, // Use the constant defined at the top
+        client_id: CLIENT_ID,
         scope: SCOPES,
         callback: (tokenResponse) => {
             if (tokenResponse.error) return console.error(tokenResponse);
             
-            // Persist token
+            // 1. Persist token
             localStorage.setItem('google_access_token', tokenResponse.access_token);
+            
+            // 2. Mark session as active so runtimeInitEngine recognizes it
+            localStorage.setItem('google_session_active', 'true');
+            
+            // 3. Set token in GAPI client
             gapi.client.setToken({ access_token: tokenResponse.access_token });
             
+            // 4. Update UI immediately after successful auth
+            updateSettingsUI(true);
+            
+            // 5. Trigger app engines[cite: 4]
             initializeAppState();
         },
     });
     gisReady = true;
-    initializeAppState(); // Attempt init (guard clause handles the rest)
+    initializeAppState();
 };
 
 async function initializeAppState() {
