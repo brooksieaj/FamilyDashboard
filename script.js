@@ -271,11 +271,18 @@ function renderCalendarGrid(events) {
         cell.appendChild(dayTopRow);
 
         const dayEvents = events.filter(e => {
-            // Determine the actual date of the event regardless of timezone offset
-            const eventDate = new Date(e.start.date || e.start.dateTime);
-            // Use the same date string format: YYYY-MM-DD
-            const eventDateStr = formatDateString(eventDate);
-            return eventDateStr === dateString;
+            // 1. Get the start time
+            const start = e.start.dateTime || e.start.date;
+            const eventDate = new Date(start);
+            
+            // 2. Adjust for timezone if the API returns a UTC string without offset
+            // This creates a Date object at midnight local time for the target cell
+            const targetDate = new Date(dateString); 
+            
+            // 3. Compare specifically by Year, Month, and Date (ignoring time)
+            return eventDate.getUTCFullYear() === targetDate.getUTCFullYear() &&
+                eventDate.getUTCMonth() === targetDate.getUTCMonth() &&
+                eventDate.getUTCDate() === targetDate.getUTCDate();
         });
 
         dayEvents.sort((a, b) => {
