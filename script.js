@@ -55,7 +55,7 @@ function initGoogleAuth() {
 
     gapi.load('client', async () => {
         await gapi.client.init({
-            apiKey: API_KEY, 
+            //apiKey: API_KEY, 
             discoveryDocs: [
                 'https://www.googleapis.com/discovery/v1/apis/tasks/v1/rest', 
                 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'
