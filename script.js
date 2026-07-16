@@ -276,12 +276,19 @@ function renderCalendarGrid(events) {
         });
 
         dayEvents.sort((a, b) => {
-            if (a.start.date && !b.start.date) return -1;
-            if (!a.start.date && b.start.date) return 1;
-            if (a.start.dateTime && b.start.dateTime) {
-                return a.start.dateTime.localeCompare(b.start.dateTime);
-            }
-            return 0;
+            // 1. Check if event is all-day
+            const aIsAllDay = !!a.start.date;
+            const bIsAllDay = !!b.start.date;
+
+            // If one is all-day and the other isn't, all-day comes first
+            if (aIsAllDay && !bIsAllDay) return -1;
+            if (!aIsAllDay && bIsAllDay) return 1;
+
+            // 2. If both are all-day, keep original order (or sort by start date)
+            if (aIsAllDay && bIsAllDay) return 0;
+
+            // 3. If both are timed, sort by time
+            return a.start.dateTime.localeCompare(b.start.dateTime);
         });
 
         dayEvents.forEach(event => {
