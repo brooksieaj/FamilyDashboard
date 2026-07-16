@@ -40,8 +40,21 @@ function getValidAccessToken() {
 /* ==========================================
    2. GOOGLE API LOADING & CORE LIFECYCLE
    ========================================== */
+// Ensure this is your ONLY trigger for initialization
+window.addEventListener('DOMContentLoaded', () => {
+    setupSidebarBehavior();
+    initGoogleAuth(); 
+});
+
 function initGoogleAuth() {
-    // 1. Initialize GAPI client ONLY with API keys and discovery docs
+    // Wait until both libraries are loaded
+    if (typeof gapi === 'undefined' || typeof google === 'undefined') {
+        console.log("Waiting for Google libraries to load...");
+        setTimeout(initGoogleAuth, 500);
+        return;
+    }
+
+    // Now safe to initialize
     gapi.load('client', async () => {
         await gapi.client.init({
             apiKey: API_KEY, 
@@ -49,42 +62,25 @@ function initGoogleAuth() {
                 'https://www.googleapis.com/discovery/v1/apis/tasks/v1/rest', 
                 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'
             ]
-            // REMOVED: clientId and scope from here
         });
         
         const activeToken = getValidAccessToken();
         if (activeToken) {
             gapi.client.setToken({ access_token: activeToken });
             updateSettingsUI(true);
-            if (document.getElementById('task-lists-container')) loadTaskListsForSettings();
         }
     });
 
-    // 2. Initialize GIS Token Client for authentication
     tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: CLIENT_ID,
         scope: SCOPES,
         callback: (tokenResponse) => {
-            if (tokenResponse.error) {
-                console.error(tokenResponse);
-                return;
-            }
-            const expiryTime = Date.now() + (parseInt(tokenResponse.expires_in) * 1000);
-            localStorage.setItem('google_access_token', tokenResponse.access_token);
-            localStorage.setItem('google_token_expiry', expiryTime.toString());
-            localStorage.setItem('google_session_active', 'true');
-            
-            gapi.client.setToken({ access_token: tokenResponse.access_token });
-            updateSettingsUI(true);
-            if (document.getElementById('task-lists-container')) loadTaskListsForSettings();
+            // ... your existing token handling ...
         },
     });
 }
 
-// Ensure the lifecycle starts after the page is ready
-window.addEventListener('DOMContentLoaded', () => {
-    setupSidebarBehavior();
-});
+
 
 // Ensure trigger button elements exist before dynamically reading standard handlers
 function handleAuthClick() {
