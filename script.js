@@ -109,6 +109,10 @@ function handleAuthClick() {
 function handleDisconnectClick() {
     if (confirm("Disconnect from Google Cloud? This will clear local tokens and disable sync features.")) {
         const token = localStorage.getItem('google_access_token');
+
+        localStorage.removeItem('calendar_cache');
+        localStorage.removeItem('calendar_cache_time');
+        localStorage.removeItem('google_session_active');
         
         if (token) {
             // Using the specific revoke method provided by GIS
@@ -632,10 +636,22 @@ function openCountdownModal() {
 function runtimeInitEngine() {
     initCountdown();
     
-    if (getValidAccessToken() || localStorage.getItem('google_session_active') === 'true') {
+    // Check if we have both the token and the session flag
+    const hasToken = !!getValidAccessToken();
+    const isSessionActive = localStorage.getItem('google_session_active') === 'true';
+
+    if (hasToken && isSessionActive) {
         updateSettingsUI(true);
     } else {
+        // Force cleanup if session is marked active but token is invalid
+        localStorage.removeItem('google_session_active');
         updateSettingsUI(false);
+        
+        // ADD THIS: If we are on index.html, force the UI into the locked state
+        const grid = document.getElementById('calendar-grid');
+        if (grid) {
+            grid.innerHTML = '<div class="blank-state-card">...Please sign in...</div>';
+        }
     }
 }
 
