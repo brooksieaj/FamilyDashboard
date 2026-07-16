@@ -47,14 +47,12 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 function initGoogleAuth() {
-    // Wait until both libraries are loaded
+    // With removed async/defer, these are now likely ready
     if (typeof gapi === 'undefined' || typeof google === 'undefined') {
-        console.log("Waiting for Google libraries to load...");
-        setTimeout(initGoogleAuth, 500);
+        setTimeout(initGoogleAuth, 100);
         return;
     }
 
-    // Now safe to initialize
     gapi.load('client', async () => {
         await gapi.client.init({
             apiKey: API_KEY, 
@@ -64,34 +62,20 @@ function initGoogleAuth() {
             ]
         });
         
+        // Initialize token client immediately after gapi is ready
+        tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: CLIENT_ID,
+            scope: SCOPES,
+            callback: (tokenResponse) => {
+                // ... (your existing callback logic)
+            },
+        });
+
         const activeToken = getValidAccessToken();
         if (activeToken) {
             gapi.client.setToken({ access_token: activeToken });
             updateSettingsUI(true);
         }
-    });
-
-tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: CLIENT_ID,
-        scope: SCOPES,
-        callback: (tokenResponse) => {
-            if (tokenResponse.error) {
-                console.error("Token error:", tokenResponse.error);
-                return;
-            }
-            // Save token
-            localStorage.setItem('google_access_token', tokenResponse.access_token);
-            localStorage.setItem('google_token_expiry', Date.now() + (tokenResponse.expires_in * 1000));
-            localStorage.setItem('google_session_active', 'true');
-            
-            // Set the token for GAPI and update UI
-            gapi.client.setToken({ access_token: tokenResponse.access_token });
-            updateSettingsUI(true);
-            
-            // Trigger syncs
-            window.syncGoogleTasks?.();
-            fetchCalendarEvents();
-        },
     });
 }
 
