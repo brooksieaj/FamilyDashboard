@@ -74,18 +74,25 @@ async function initializeAppState() {
         console.log("Restoring active session...");
         gapi.client.setToken({ access_token: token });
         
+        // --- ADD THIS FIX: Force the Settings UI to show "Connected" on page load ---
+        updateSettingsUI(true);
+        
         // Trigger all page-specific engines
-        if (document.getElementById('calendar-grid')) fetchWeatherData();
-        if (window.syncGoogleTasks) window.syncGoogleTasks();
-        // ... add other engine calls here
+        if (document.getElementById('calendar-grid')) fetchWeatherData();[cite: 5]
+        if (window.syncGoogleTasks) window.syncGoogleTasks();[cite: 5]
+        if (document.getElementById('task-lists-container')) loadTaskListsForSettings();
+        if (document.getElementById('tasks-container')) initTasksEngine();
+    } else {
+        // If no valid session is active, make sure UI reflects disconnected state
+        updateSettingsUI(false);
     }
 
-    // 3. Page-specific non-API engines
-    initMealPlannerEngine();
-    initShoppingListEngine();
-    initCountdown(); // Moved from runtimeInitEngine
+    // 3. Page-specific non-API engines[cite: 5]
+    initMealPlannerEngine();[cite: 5]
+    initShoppingListEngine();[cite: 5]
+    initCountdown(); // Moved from runtimeInitEngine[cite: 5]
     
-    window.appInitialized = true;
+    window.appInitialized = true;[cite: 5]
 }
 
 function handleAuthClick() {
