@@ -3,15 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Family Board Dashboard - Settings</title>
+    <title>Family Board - Settings</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .settings-container {
+            background-color: #ffffff;
+            border: 1px solid #e0e2e6;
+            border-radius: 8px;
+            padding: 30px;
+            max-width: 600px;
+            margin: 20px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .settings-section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #f0f2f5;
+        }
+        .settings-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .settings-section h2 { font-size: 1.4rem; color: #333; margin-top: 0; margin-bottom: 10px; }
+        .settings-section p { color: #666; font-size: 1rem; line-height: 1.5; margin-bottom: 15px; }
+        .status-badge { display: inline-flex; align-items: center; gap: 8px; font-weight: bold; font-size: 0.95rem; padding: 6px 14px; border-radius: 20px; margin-bottom: 15px; }
+        .status-badge.connected { background-color: #e6f4ea; color: #137333; }
+        .status-badge.disconnected { background-color: #fce8e6; color: #c5221f; }
+        .auth-btn-group { display: flex; gap: 12px; }
+        .disconnect-btn { background-color: #db4437; }
+        .disconnect-btn:hover { background-color: #c53929; }
+    </style>
 </head>
 <body>
 
-    <!-- Unified Flex Structural Wrapper -->
     <div class="dashboard-container">
-
         <!-- Retractable Side Menu -->
         <nav id="sidebar" class="sidebar collapsed">
             <div class="sidebar-header">
@@ -19,60 +42,40 @@
                 <span class="sidebar-title">Family Hub</span>
             </div>
             <ul class="sidebar-menu">
-                <li>
-                    <a href="index.html">
-                        <i class="fas fa-calendar-alt"></i>
-                        <span class="menu-text">Calendar</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="meals.html">
-                        <i class="fas fa-utensils"></i>
-                        <span class="menu-text">Meals</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="shopping.html">
-                        <i class="fas fa-shopping-basket"></i>
-                        <span class="menu-text">Shopping List</span>
-                    </a>
-                </li>
-                <li class="active">
-                    <a href="settings.html">
-                        <i class="fas fa-cog"></i>
-                        <span class="menu-text">Settings</span>
-                    </a>
-                </li>
+                <li><a href="index.html"><i class="fas fa-calendar-alt"></i><span class="menu-text">Calendar</span></a></li>
+                <li><a href="meals.html"><i class="fas fa-utensils"></i><span class="menu-text">Meals</span></a></li>
+                <li><a href="shopping.html"><i class="fas fa-shopping-basket"></i><span class="menu-text">Shopping List</span></a></li>
+                <li class="active"><a href="settings.html"><i class="fas fa-cog"></i><span class="menu-text">Settings</span></a></li>
             </ul>
         </nav>
 
-        <!-- Main Content Area Wrapper -->
-        <main class="main-content">
-            <section class="shopping-section"> <!-- Reusing layout section class padding -->
-                <div class="controls">
-                    <div class="header-left">
-                        <button id="contentMenuToggle" class="icon-btn hide-on-desktop"><i class="fas fa-bars"></i></button>
-                        <h1>Settings</h1>
-                    </div>
+        <!-- Main Content Area -->
+        <main class="main-content" style="padding: 20px;">
+            <header class="controls" style="margin-bottom: 15px;">
+                <div class="header-left">
+                    <button id="contentMenuToggle" class="icon-btn hide-on-desktop"><i class="fas fa-bars"></i></button>
+                    <h1>System Settings</h1>
                 </div>
+            </header>
 
-                <!-- Google Authentication Interface Card -->
-                <div class="blank-state-card">
-                    <span class="placeholder-icon"><i class="fab fa-google"></i></span>
-                    <h2>Account Connection</h2>
-                    <p style="margin-bottom: 25px;">Sign in with your Google account to sync your family calendars seamlessly.</p>
+            <div class="settings-container">
+                <div class="settings-section">
+                    <h2>Google Cloud Integration</h2>
+                    <p>Link your master Google Account to sync shared Family Calendars and manage your cloud ecosystem updates across the board.</p>
                     
-                    <div style="display: flex; justify-content: center; gap: 15px;">
-                        <button id="auth-button" onclick="handleAuthClick()">Sign In to Google</button>
-                        <button id="signout-button" class="clear-bought-btn hidden" onclick="handleSignoutClick()">Sign Out</button>
+                    <div id="auth-status-badge" class="status-badge disconnected">
+                        <i class="fas fa-circle"></i> <span id="status-text">Disconnected</span>
+                    </div>
+
+                    <div class="auth-btn-group">
+                        <button id="auth_button" onclick="handleAuthClick()">Sign In with Google</button>
+                        <button id="disconnect_button" class="disconnect-btn hidden" onclick="handleDisconnectClick()">Disconnect</button>
                     </div>
                 </div>
-            </section>
+            </div>
         </main>
-        
     </div>
 
-    <!-- Asynchronous Google API & Architecture Engines -->
     <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
     <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
     <script src="script.js"></script>

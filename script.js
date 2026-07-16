@@ -943,3 +943,22 @@ function masterOnloadPipeline() {
 }
 
 window.onload = masterOnloadPipeline;
+
+function updateUI(isConnected) {
+    const badge = document.getElementById('auth-status-badge');
+    const statusText = document.getElementById('status-text');
+    const authBtn = document.getElementById('auth_button');
+    const disconnectBtn = document.getElementById('disconnect_button');
+
+    if (isConnected) {
+        badge.className = 'status-badge connected';
+        statusText.innerText = 'Connected';
+        authBtn.classList.add('hidden');
+        disconnectBtn.classList.remove('hidden');
+    } else {
+        badge.className = 'status-badge disconnected';
+        statusText.innerText = 'Disconnected';
+        authBtn.classList.remove('hidden');
+        disconnectBtn.classList.add('hidden');
+    }
+}
