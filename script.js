@@ -271,19 +271,19 @@ function renderCalendarGrid(events) {
         cell.appendChild(dayTopRow);
 
         const dayEvents = events.filter(e => {
-            if (!e.start) return false;
-            // Get the date part directly from the string provided by Google
-            // This is 'YYYY-MM-DD' regardless of timezone for both .date and .dateTime
-            const eventDateStr = (e.start.date || e.start.dateTime).substring(0, 10);
-            return eventDateStr === dateString;
+            // 1. Strict null-check for the start property
+            if (!e || !e.start) return false;
+            const datePart = (e.start.date || e.start.dateTime || "").substring(0, 10);
+            return datePart === dateString;
         });
 
+        // 2. Sort with absolute safety
         dayEvents.sort((a, b) => {
-            // 1. Safety Guard: If either event is missing 'start', push it to the end
+            // Treat null/undefined starts as lowest priority (at the end)
             if (!a.start) return 1;
             if (!b.start) return -1;
 
-            // 2. Check if event is all-day
+            // All-day event check
             const aIsAllDay = !!a.start.date;
             const bIsAllDay = !!b.start.date;
 
@@ -291,26 +291,28 @@ function renderCalendarGrid(events) {
             if (!aIsAllDay && bIsAllDay) return 1;
             if (aIsAllDay && bIsAllDay) return 0;
 
-            // 3. If both are timed, safely check for .dateTime before substring
-            const aTime = a.start.dateTime || "";
-            const bTime = b.start.dateTime || "";
-
-            return aTime.localeCompare(bTime);
+            // Timed events: Safe string comparison
+            return (a.start.dateTime || "").localeCompare(b.start.dateTime || "");
         });
 
+        // 3. Render
         dayEvents.forEach(event => {
             const evEl = document.createElement('div');
             evEl.className = 'event'; 
-            evEl.style.backgroundColor = event.calendarColor;
+            evEl.style.backgroundColor = event.calendarColor || '#4285f4'; // Fallback color
 
             let timeStr = "";
             if (event.start.dateTime) {
-                const d = new Date(event.start.dateTime);
-                timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) + " ";
+                // Use try-catch here to ensure one bad date string doesn't break the whole loop
+                try {
+                    const d = new Date(event.start.dateTime);
+                    timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) + " ";
+                } catch (e) {
+                    timeStr = "";
+                }
             }
 
-            evEl.innerText = `${timeStr}${event.summary}`;
-            
+            evEl.innerText = `${timeStr}${event.summary || 'Untitled Event'}`;
             evEl.onclick = (e) => {
                 e.stopPropagation(); 
                 openEventModal(event);
