@@ -1010,14 +1010,24 @@ async function initTasksEngine() {
     if (!tasksContainer) return;
 
     const selectedLists = JSON.parse(localStorage.getItem('selected_task_lists') || '[]');
-    
-    // Fetch tasks for each selected list
+    tasksContainer.innerHTML = ''; // Clear container
+
     for (const listId of selectedLists) {
-        const tasksRes = await gapi.client.tasks.tasks.list({ tasklist: listId });
-        renderTasks(tasksRes.result.items, listId);
+        try {
+            // 1. Fetch the list metadata to get the title
+            const listDetails = await gapi.client.tasks.tasklists.get({ tasklist: listId });
+            const listTitle = listDetails.result.title;
+
+            // 2. Fetch the tasks for that list
+            const tasksRes = await gapi.client.tasks.tasks.list({ tasklist: listId });
+            
+            // 3. Render using the title
+            renderTasks(tasksRes.result.items, listTitle); 
+        } catch (err) {
+            console.error(`Error loading list ${listId}:`, err);
+        }
     }
 }
-
 // Example CRUD helper for adding a task
 async function addTask(listId, title) {
     await gapi.client.tasks.tasks.insert({
@@ -1027,7 +1037,7 @@ async function addTask(listId, title) {
     initTasksEngine(); // Refresh view
 }
 
-function renderTasks(tasks, listId) {
+function renderTasks(tasks, listTitle) {
     const container = document.getElementById('tasks-container');
     if (!container) return;
 
@@ -1035,9 +1045,8 @@ function renderTasks(tasks, listId) {
     listSection.className = 'task-list-section';
     listSection.style.marginBottom = '20px';
     
-    // Create a title for the list (optional: fetch title from list metadata if needed)
     listSection.innerHTML = `
-        <h3 style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">List: ${listId}</h3>
+        <h3 style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">${listTitle}</h3>
         <ul>
             ${tasks && tasks.length > 0 
                 ? tasks.map(t => `<li style="list-style: none; padding: 5px 0;"><i class="fas fa-check-circle" style="color: #4285f4; margin-right: 8px;"></i>${t.title}</li>`).join('') 
