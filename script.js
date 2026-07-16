@@ -47,6 +47,10 @@ window.gisLoaded = function() {
             
             // 2. Mark session as active so runtimeInitEngine recognizes it
             localStorage.setItem('google_session_active', 'true');
+
+            // tokenResponse.expires_in is provided by Google in seconds
+            const expiryTime = Date.now() + (parseInt(tokenResponse.expires_in) * 1000);
+            localStorage.setItem('google_token_expiry', expiryTime);
             
             // 3. Set token in GAPI client
             gapi.client.setToken({ access_token: tokenResponse.access_token });
