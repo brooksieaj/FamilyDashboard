@@ -512,13 +512,20 @@ function submitEvent() {
 }
 
 function deleteEvent() {
-    if (currentEditEvent && confirm("Permanently drop this event entry from the master timeline?")) {
+    if (currentEditEvent && confirm("Permanently delete this event entry from the calendar?")) {
         gapi.client.calendar.events.delete({
             calendarId: currentEditEvent.calendarId,
             eventId: currentEditEvent.id
         }).then(() => {
+            // ADD THESE LINES TO CLEAR CACHE AFTER DELETION
+            localStorage.removeItem('calendar_cache');
+            localStorage.removeItem('calendar_cache_time');
+            
             closeEventModal();
-            fetchCalendarEvents();
+            fetchCalendarEvents(); // This will now fetch fresh data from Google
+        }).catch(err => {
+            console.error("Delete failed:", err);
+            alert("Error deleting event. Check console.");
         });
     }
 }
