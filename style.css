@@ -214,6 +214,28 @@ button {
 }
 button:hover { background-color: #357ae8; }
 
+.action-btn { 
+    padding: 12px 22px; 
+    border: none; 
+    border-radius: 6px; 
+    font-weight: bold; 
+    font-size: 1.05rem; 
+    cursor: pointer; 
+    transition: background 0.2s; 
+    font-family: inherit;
+    color: white;
+    margin-right: 10px; /* Maintains consistency with other buttons */
+}
+
+/* Specific override for the refresh color if needed */
+#refresh-calendar-btn {
+    background-color: #0f9d58;
+}
+
+#refresh-calendar-btn:hover {
+    background-color: #0c8a4d; /* Slightly darker green for hover */
+}
+
 .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); }
 .modal-content { background-color: white; margin: 8% auto; padding: 30px; border-radius: 15px; width: 480px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid #ccc; }
 .modal-content h2 { margin-top: 0; color: #333; font-size: 1.7rem; border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; }
