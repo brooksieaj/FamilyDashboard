@@ -451,12 +451,16 @@ function submitEvent() {
     // rather than relying on the (hidden) select dropdown
     const targetCalendarId = currentEditEvent ? currentEditEvent.calendarId : calendarId;
 
-    if (currentEditEvent) {
+    if (currentEditEvent) { 
         gapi.client.calendar.events.update({
             calendarId: targetCalendarId,
             eventId: currentEditEvent.id,
             resource: resource
         }).then(() => {
+            // Clear cache to force fresh fetch
+            localStorage.removeItem('calendar_cache');
+            localStorage.removeItem('calendar_cache_time');
+            
             closeEventModal();
             fetchCalendarEvents();
         }).catch(err => {
@@ -464,10 +468,15 @@ function submitEvent() {
             alert("Error updating event. Check console.");
         });
     } else {
+        // This is the "else" statement you asked about
         gapi.client.calendar.events.insert({
             calendarId: calendarId,
             resource: resource
         }).then(() => {
+            // Also clear cache here so new events appear immediately
+            localStorage.removeItem('calendar_cache');
+            localStorage.removeItem('calendar_cache_time');
+            
             closeEventModal();
             fetchCalendarEvents();
         }).catch(err => {
