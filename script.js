@@ -530,6 +530,20 @@ function deleteEvent() {
     }
 }
 
+function forceRefreshCalendar() {
+    if (!getValidAccessToken()) {
+        alert("Please sign in to sync events.");
+        return;
+    }
+    
+    // Clear the cache to force a fresh network request
+    localStorage.removeItem('calendar_cache');
+    localStorage.removeItem('calendar_cache_time');
+    
+    console.log("Manual refresh triggered.");
+    fetchCalendarEvents(); // Re-sync all events
+}
+
 /* ==========================================
    7. SPECIAL AD-HOC APPS: COUNTDOWN ENGINE
    ========================================== */
