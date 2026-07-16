@@ -54,7 +54,7 @@ window.gisLoaded = function() {
             // 4. Update UI immediately after successful auth
             updateSettingsUI(true);
             
-            // 5. Trigger app engines[cite: 4]
+            // 5. Trigger app engines
             initializeAppState();
         },
     });
@@ -78,8 +78,8 @@ async function initializeAppState() {
         updateSettingsUI(true);
         
         // Trigger all page-specific engines
-        if (document.getElementById('calendar-grid')) fetchWeatherData();[cite: 5]
-        if (window.syncGoogleTasks) window.syncGoogleTasks();[cite: 5]
+        if (document.getElementById('calendar-grid')) fetchWeatherData();
+        if (window.syncGoogleTasks) window.syncGoogleTasks();
         if (document.getElementById('task-lists-container')) loadTaskListsForSettings();
         if (document.getElementById('tasks-container')) initTasksEngine();
     } else {
@@ -87,12 +87,12 @@ async function initializeAppState() {
         updateSettingsUI(false);
     }
 
-    // 3. Page-specific non-API engines[cite: 5]
-    initMealPlannerEngine();[cite: 5]
-    initShoppingListEngine();[cite: 5]
-    initCountdown(); // Moved from runtimeInitEngine[cite: 5]
+    // 3. Page-specific non-API engines
+    initMealPlannerEngine();
+    initShoppingListEngine();
+    initCountdown(); // Moved from runtimeInitEngine
     
-    window.appInitialized = true;[cite: 5]
+    window.appInitialized = true;
 }
 
 function handleAuthClick() {
