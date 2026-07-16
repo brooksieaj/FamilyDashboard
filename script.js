@@ -463,7 +463,17 @@ function submitEvent() {
             alert("Failed to update event. Check console for details.");
         });
     } else {
-        // ... (existing insert logic)
+        gapi.client.calendar.events.insert({
+            calendarId: calendarId, // Uses the ID from your dropdown select
+            resource: resource      // Uses the same resource object constructed for updates
+        }).then(response => {
+            console.log("Event created successfully:", response);
+            closeEventModal();
+            fetchCalendarEvents();  // Refresh the UI to show the new event
+        }).catch(err => {
+            console.error("Creation failed:", err);
+            alert("Failed to create event. Check console for details.");
+        });
     }
 }
 
