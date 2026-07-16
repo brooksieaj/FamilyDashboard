@@ -430,44 +430,40 @@ function submitEvent() {
 
     let start = {}, end = {};
     if (!time) {
+        // All-day event
         start.date = date;
         end.date = date;
     } else {
-        const startIso = `${date}T${time}:00`;
-        start.dateTime = startIso;
+        // Timed event: Use the specific date and time selected
+        start.dateTime = `${date}T${time}:00`;
         start.timeZone = 'Australia/Perth';
         
+        // Calculate end time (1 hour later)
         const endDateObj = new Date(`${date}T${time}:00`);
-        endDateObj.setHours(endDateObj.getHours() + 1); 
+        endDateObj.setHours(endDateObj.getHours() + 1);
         
-        const endStr = endDateObj.getFullYear() + '-' + 
-            String(endDateObj.getMonth() + 1).padStart(2, '0') + '-' + 
-            String(endDateObj.getDate()).padStart(2, '0');
-        const endTimeStr = String(endDateObj.getHours()).padStart(2, '0') + ':' + String(endDateObj.getMinutes()).padStart(2, '0');
-        
-        end.dateTime = `${endStr}T${endTimeStr}:00`;
+        end.dateTime = endDateObj.toISOString();
         end.timeZone = 'Australia/Perth';
     }
 
     const resource = { summary, start, end };
 
     if (currentEditEvent) {
+        // Ensure you are using the correct event ID and calendar ID
         gapi.client.calendar.events.update({
             calendarId: currentEditEvent.calendarId,
             eventId: currentEditEvent.id,
             resource: resource
-        }).then(() => {
+        }).then(response => {
+            console.log("Event updated successfully:", response);
             closeEventModal();
-            fetchCalendarEvents();
+            fetchCalendarEvents(); // Refreshes the grid
+        }).catch(err => {
+            console.error("Update failed:", err);
+            alert("Failed to update event. Check console for details.");
         });
     } else {
-        gapi.client.calendar.events.insert({
-            calendarId: calendarId,
-            resource: resource
-        }).then(() => {
-            closeEventModal();
-            fetchCalendarEvents();
-        });
+        // ... (existing insert logic)
     }
 }
 
