@@ -23,18 +23,62 @@ let weatherForecast = null;
 let gapiReady = false;
 let gisReady = false;
 
-window.gapiLoaded = function() {
-    console.log("GAPI loaded");
-    gapiReady = true;
-    gapi.load('client', initializeGapiClient);
+window.gapiLoaded = async function() {
+    console.log("GAPI loading...");
+    await gapi.load('client', async () => {
+        await gapi.client.init({});
+        await gapi.client.load('calendar', 'v3');
+        await gapi.client.load('tasks', 'v1');
+        gapiReady = true;
+        initializeAppState();
+    });
 };
 
 window.gisLoaded = function() {
-    console.log("GIS loaded");
+    console.log("GIS loading...");
+    tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID, // Use the constant defined at the top
+        scope: SCOPES,
+        callback: (tokenResponse) => {
+            if (tokenResponse.error) return console.error(tokenResponse);
+            
+            // Persist token
+            localStorage.setItem('google_access_token', tokenResponse.access_token);
+            gapi.client.setToken({ access_token: tokenResponse.access_token });
+            
+            initializeAppState();
+        },
+    });
     gisReady = true;
-    // Call your initialization function here
-    initializeAppState(); 
+    initializeAppState(); // Attempt init (guard clause handles the rest)
 };
+
+async function initializeAppState() {
+    // 1. Guard Clause: If libraries aren't ready, don't run engines
+    if (!gapiReady || !gisReady) return;
+
+    // 2. Prevent redundant execution
+    if (window.appInitialized) return;
+    window.appInitialized = true;
+
+    console.log("Initializing App Engines...");
+
+    // 3. Authentication Check: Verify token exists
+    const token = gapi.client.getToken();
+    const isAuthenticated = token !== null && token.access_token !== undefined;
+
+    if (isAuthenticated) {
+        console.log("Authenticated: Starting API engines.");
+        if (document.getElementById('calendar-grid')) fetchWeatherData();
+        if (window.syncGoogleTasks) window.syncGoogleTasks();
+        if (document.getElementById('task-lists-container')) loadTaskListsForSettings();
+        if (document.getElementById('tasks-container')) initTasksEngine();
+    }
+    
+    // Page-specific engines that don't need APIs
+    initMealPlannerEngine();
+    initShoppingListEngine();
+}
 
 // Secure token persistence getter
 function getValidAccessToken() {
@@ -50,99 +94,6 @@ function getValidAccessToken() {
         return null;
     }
     return token;
-}
-
-/* ==========================================
-   2. GOOGLE API LOADING & CORE LIFECYCLE
-   ========================================== */
-function gapiLoaded() {
-    gapi.load('client', async () => {
-        await gapi.client.init({});
-        await gapi.client.load('calendar', 'v3');
-        await gapi.client.load('tasks', 'v1');
-        
-        console.log("Google Libraries Loaded");
-        gapiReady = true; 
-        
-        // Notify the rest of your app that gapi is ready
-        window.dispatchEvent(new CustomEvent('gapi-ready'));
-    });
-}
-
-function gisLoaded() {
-    tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: CLIENT_ID,
-        scope: SCOPES,
-        callback: (tokenResponse) => {
-            if (tokenResponse.error !== undefined) {
-                console.error("Auth error:", tokenResponse);
-                return;
-            }
-            
-            // Persist token data
-            const expiryTime = Date.now() + (parseInt(tokenResponse.expires_in) * 1000);
-            localStorage.setItem('google_access_token', tokenResponse.access_token);
-            localStorage.setItem('google_token_expiry', expiryTime.toString());
-            localStorage.setItem('google_session_active', 'true');
-            
-            // Set token for GAPI
-            if (gapi.client) gapi.client.setToken({ access_token: tokenResponse.access_token });
-            updateSettingsUI(true);
-
-            // Trigger the centralized app state logic
-            initializeAppState();
-        },
-    });
-
-    gisReady = true; // Mark GIS as ready
-
-    // Silent refresh attempt
-    if (!getValidAccessToken() && localStorage.getItem('google_session_active') === 'true') {
-        tokenClient.requestAccessToken({ prompt: 'none' });
-    } else {
-        // Even if not refreshing, check if we are ready to run other engines
-        initializeAppState();
-    }
-}
-
-async function initializeAppState() {
-    // 1. Guard Clause: If libraries aren't ready, don't run engines
-    if (!gapiReady || !gisReady) return;
-
-    // 2. Prevent redundant execution
-    if (window.appInitialized) return;
-    window.appInitialized = true;
-
-    console.log("Initializing App Engines...");
-
-    // 3. Authentication Check: Verify token exists before triggering API-reliant engines
-    const token = gapi.client.getToken();
-    const isAuthenticated = token !== null && token.access_token !== undefined;
-
-    if (isAuthenticated) {
-        console.log("Authenticated: Starting API engines.");
-        if (document.getElementById('calendar-grid')) fetchWeatherData();
-        if (window.syncGoogleTasks) window.syncGoogleTasks();
-        if (document.getElementById('task-lists-container')) loadTaskListsForSettings();
-        if (document.getElementById('tasks-container')) initTasksEngine();
-    } else {
-        console.warn("Authentication required: Skipping API-reliant engines.");
-        // Optional: Update UI to notify user
-        if (document.getElementById('task-lists-container')) {
-            document.getElementById('task-lists-container').innerHTML = "<p>Please sign in to access your data.</p>";
-        }
-    }
-    
-    // Page-specific engines that don't need APIs
-    initMealPlannerEngine();
-    initShoppingListEngine();
-}
-
-window.addEventListener('gapi-ready', initializeAppState);
-
-function handleAuthClick() {
-    // This triggers the popup flow which does not require a page reload
-    tokenClient.requestAccessToken({ prompt: 'consent' });
 }
 
 function handleDisconnectClick() {
@@ -1090,14 +1041,4 @@ function toggleTaskList(listId) {
 }
 
 
-/* ==========================================
-   11. LIFECYCLE HANDOFF ENGINE
-   ========================================== */
-// Unifies the execution chain to prevent multiple `window.onload` overwrites
-function masterOnloadPipeline() {
-    runtimeInitEngine();
-    setupSidebarBehavior(); // UI only, safe to run immediately
-}
-
-window.onload = masterOnloadPipeline;
 
