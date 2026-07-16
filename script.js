@@ -260,6 +260,17 @@ function renderCalendarGrid(events) {
 
         const cell = document.createElement('div');
         cell.className = 'day-cell';
+
+        cell.onclick = (e) => {
+            // Only trigger if clicking the cell background or header, not an event
+            if (e.target.classList.contains('day-cell') || 
+                e.target.classList.contains('day-top-row') || 
+                e.target.classList.contains('day-num')) {
+                
+                openEventModal(null); // Open modal for adding
+                document.getElementById('eventDate').value = dateString; // Auto-set clicked date
+            }
+        };
         
         const todayStr = formatDateString(new Date());
         if (dateString === todayStr) {
@@ -390,7 +401,13 @@ function openEventModal(event = null) {
         document.getElementById('eventSummary').value = '';
         document.getElementById('eventCalendar').value = 'primary';
         document.getElementById('calendar-select-group').style.display = 'block';
-        document.getElementById('eventDate').value = formatDateString(new Date());
+
+        // ONLY set to today if the input is currently empty 
+        // (This allows the cell click handler to pass the date through first)
+        if (!document.getElementById('eventDate').value) {
+            document.getElementById('eventDate').value = formatDateString(new Date());
+        }
+
         document.getElementById('eventTime').value = '12:00';
         document.getElementById('deleteEventBtn').style.display = 'none';
     }

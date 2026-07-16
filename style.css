@@ -110,6 +110,10 @@ h1 {
     /* FIX: Prevents text selection on multi-taps, ensuring click actions fire cleanly on touch */
     user-select: none;
     -webkit-user-select: none;
+
+    /* ADD THESE TO IMPROVE TOUCH SENSITIVITY */
+    -webkit-tap-highlight-color: transparent; 
+    cursor: pointer;
 }
 
 .day-cell {
@@ -121,6 +125,7 @@ h1 {
     overflow: hidden; 
     min-height: 100px; 
     transition: all 0.3s ease;
+    cursor: pointer; /* Provides visual feedback that the cell is interactive */
 }
 
 .day-top-row {
