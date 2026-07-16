@@ -430,17 +430,16 @@ function submitEvent() {
 
     let start = {}, end = {};
     if (!time) {
-        // All-day event
+        // All-day event: Google API expects a simple date string
         start.date = date;
         end.date = date;
     } else {
-        // Timed event: Use the specific date and time selected
+        // Timed event: Use ISO strings for both start and end
         start.dateTime = `${date}T${time}:00`;
         start.timeZone = 'Australia/Perth';
         
-        // Calculate end time (1 hour later)
         const endDateObj = new Date(`${date}T${time}:00`);
-        endDateObj.setHours(endDateObj.getHours() + 1);
+        endDateObj.setHours(endDateObj.getHours() + 1); 
         
         end.dateTime = endDateObj.toISOString();
         end.timeZone = 'Australia/Perth';
@@ -448,31 +447,32 @@ function submitEvent() {
 
     const resource = { summary, start, end };
 
+    // FIX: Always use the ID stored in the object being edited, 
+    // rather than relying on the (hidden) select dropdown
+    const targetCalendarId = currentEditEvent ? currentEditEvent.calendarId : calendarId;
+
     if (currentEditEvent) {
-        // Ensure you are using the correct event ID and calendar ID
         gapi.client.calendar.events.update({
-            calendarId: currentEditEvent.calendarId,
+            calendarId: targetCalendarId,
             eventId: currentEditEvent.id,
             resource: resource
-        }).then(response => {
-            console.log("Event updated successfully:", response);
+        }).then(() => {
             closeEventModal();
-            fetchCalendarEvents(); // Refreshes the grid
+            fetchCalendarEvents();
         }).catch(err => {
             console.error("Update failed:", err);
-            alert("Failed to update event. Check console for details.");
+            alert("Error updating event. Check console.");
         });
     } else {
         gapi.client.calendar.events.insert({
-            calendarId: calendarId, // Uses the ID from your dropdown select
-            resource: resource      // Uses the same resource object constructed for updates
-        }).then(response => {
-            console.log("Event created successfully:", response);
+            calendarId: calendarId,
+            resource: resource
+        }).then(() => {
             closeEventModal();
-            fetchCalendarEvents();  // Refresh the UI to show the new event
+            fetchCalendarEvents();
         }).catch(err => {
-            console.error("Creation failed:", err);
-            alert("Failed to create event. Check console for details.");
+            console.error("Insert failed:", err);
+            alert("Error creating event. Check console.");
         });
     }
 }
