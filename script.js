@@ -271,10 +271,10 @@ function renderCalendarGrid(events) {
         cell.appendChild(dayTopRow);
 
         const dayEvents = events.filter(e => {
-            // Determine the actual date of the event regardless of timezone offset
-            const eventDate = new Date(e.start.date || e.start.dateTime);
-            // Use the same date string format: YYYY-MM-DD
-            const eventDateStr = formatDateString(eventDate);
+            if (!e.start) return false;
+            // Get the date part directly from the string provided by Google
+            // This is 'YYYY-MM-DD' regardless of timezone for both .date and .dateTime
+            const eventDateStr = (e.start.date || e.start.dateTime).substring(0, 10);
             return eventDateStr === dateString;
         });
 
