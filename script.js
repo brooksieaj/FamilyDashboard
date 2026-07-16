@@ -80,6 +80,16 @@ async function initializeAppState() {
     initShoppingListEngine();
 }
 
+function handleAuthClick() {
+    if (!tokenClient) {
+        console.error("Auth client not initialized.");
+        return;
+    }
+    
+    // Trigger the Google OAuth flow
+    tokenClient.requestAccessToken({ prompt: 'consent' });
+}
+
 // Secure token persistence getter
 function getValidAccessToken() {
     const token = localStorage.getItem('google_access_token');
