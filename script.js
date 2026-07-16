@@ -1027,6 +1027,26 @@ async function addTask(listId, title) {
     initTasksEngine(); // Refresh view
 }
 
+function renderTasks(tasks, listId) {
+    const container = document.getElementById('tasks-container');
+    if (!container) return;
+
+    const listSection = document.createElement('div');
+    listSection.className = 'task-list-section';
+    listSection.style.marginBottom = '20px';
+    
+    // Create a title for the list (optional: fetch title from list metadata if needed)
+    listSection.innerHTML = `
+        <h3 style="border-bottom: 1px solid #ccc; padding-bottom: 5px;">List: ${listId}</h3>
+        <ul>
+            ${tasks && tasks.length > 0 
+                ? tasks.map(t => `<li style="list-style: none; padding: 5px 0;"><i class="fas fa-check-circle" style="color: #4285f4; margin-right: 8px;"></i>${t.title}</li>`).join('') 
+                : '<li style="list-style: none; color: #777;">No tasks found.</li>'}
+        </ul>
+    `;
+    container.appendChild(listSection);
+}
+
 async function loadTaskListsForSettings() {
     const container = document.getElementById('task-lists-container');
     if (!container) return;
