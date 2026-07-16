@@ -47,7 +47,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 function initGoogleAuth() {
-    // With removed async/defer, these are now likely ready
+    // Wait for libraries to load
     if (typeof gapi === 'undefined' || typeof google === 'undefined') {
         setTimeout(initGoogleAuth, 100);
         return;
@@ -55,26 +55,43 @@ function initGoogleAuth() {
 
     gapi.load('client', async () => {
         await gapi.client.init({
-            //apiKey: API_KEY, 
             discoveryDocs: [
                 'https://www.googleapis.com/discovery/v1/apis/tasks/v1/rest', 
                 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'
             ]
         });
         
-        // Initialize token client immediately after gapi is ready
+        // Initialize the Token Client with Redirect UX mode
         tokenClient = google.accounts.oauth2.initTokenClient({
             client_id: CLIENT_ID,
             scope: SCOPES,
-            callback: (tokenResponse) => {
-                // ... (your existing callback logic)
-            },
+            ux_mode: 'redirect', 
+            redirect_uri: 'https://brooksieaj.github.io/FamilyDashboard/'
         });
 
-        const activeToken = getValidAccessToken();
-        if (activeToken) {
-            gapi.client.setToken({ access_token: activeToken });
+        // Check if we returned from a redirect with a token in the URL hash
+        const urlParams = new URLSearchParams(window.location.hash.substring(1));
+        const token = urlParams.get('access_token');
+        
+        if (token) {
+            // Save new token from redirect
+            localStorage.setItem('google_access_token', token);
+            localStorage.setItem('google_token_expiry', Date.now() + 3600000); // 1 hour
+            localStorage.setItem('google_session_active', 'true');
+            
+            // Clean the URL to remove the token for security
+            window.history.replaceState(null, null, window.location.pathname);
+            
+            gapi.client.setToken({ access_token: token });
             updateSettingsUI(true);
+            fetchCalendarEvents();
+        } else {
+            // Otherwise, check for an existing valid token in local storage
+            const activeToken = getValidAccessToken();
+            if (activeToken) {
+                gapi.client.setToken({ access_token: activeToken });
+                updateSettingsUI(true);
+            }
         }
     });
 }
