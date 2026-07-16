@@ -988,6 +988,9 @@ function initShoppingListEngine() {
     }
 }
 
+initTasksEngine() {
+}
+
 /* ==========================================
    11. LIFECYCLE HANDOFF ENGINE
    ========================================== */
@@ -996,7 +999,13 @@ function masterOnloadPipeline() {
     runtimeInitEngine();
     initMealPlannerEngine();
     initShoppingListEngine();
+    
+    // Add conditional check for Tasks page
+    if (document.getElementById('tasks-container')) {
+        initTasksEngine();
+    }
 }
 
 window.onload = masterOnloadPipeline;
+
 

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Board - Tasks</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <nav id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <button id="sidebarToggle" class="icon-btn"><i class="fas fa-bars"></i></button>
+                <span class="sidebar-title">Family Hub</span>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="index.html"><i class="fas fa-calendar-alt"></i><span class="menu-text">Calendar</span></a></li>
+                <li><a href="meals.html"><i class="fas fa-utensils"></i><span class="menu-text">Meals</span></a></li>
+                <li><a href="shopping.html"><i class="fas fa-shopping-basket"></i><span class="menu-text">Shopping List</span></a></li>
+                <li class="active"><a href="tasks.html"><i class="fas fa-tasks"></i><span class="menu-text">Tasks</span></a></li>
+                <li><a href="settings.html"><i class="fas fa-cog"></i><span class="menu-text">Settings</span></a></li>
+            </ul>
+        </nav>
+
+        <main class="main-content" style="padding: 20px;">
+            <h1>Tasks</h1>
+            <div id="tasks-container" class="shopping-content-area">
+                <!-- Tasks will be injected here by script.js -->
+            </div>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
