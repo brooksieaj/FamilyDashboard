@@ -83,10 +83,7 @@ function initGoogleAuth() {
 
 // Ensure the lifecycle starts after the page is ready
 window.addEventListener('DOMContentLoaded', () => {
-    // Setup Sidebar
     setupSidebarBehavior();
-    // Start Google Auth Engine
-    initGoogleAuth();
 });
 
 // Ensure trigger button elements exist before dynamically reading standard handlers
