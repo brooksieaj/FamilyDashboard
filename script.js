@@ -96,17 +96,29 @@ async function initializeAppState() {
     // 1. Guard Clause: If libraries aren't ready, don't run engines
     if (!gapiReady || !gisReady) return;
 
-    // 2. Prevent redundant execution if already running
+    // 2. Prevent redundant execution
     if (window.appInitialized) return;
     window.appInitialized = true;
 
     console.log("Initializing App Engines...");
 
-    // 3. Conditional initialization based on current page/elements
-    if (document.getElementById('calendar-grid')) fetchWeatherData();
-    if (window.syncGoogleTasks) window.syncGoogleTasks();
-    if (document.getElementById('task-lists-container')) loadTaskListsForSettings();
-    if (document.getElementById('tasks-container')) initTasksEngine();
+    // 3. Authentication Check: Verify token exists before triggering API-reliant engines
+    const token = gapi.client.getToken();
+    const isAuthenticated = token !== null && token.access_token !== undefined;
+
+    if (isAuthenticated) {
+        console.log("Authenticated: Starting API engines.");
+        if (document.getElementById('calendar-grid')) fetchWeatherData();
+        if (window.syncGoogleTasks) window.syncGoogleTasks();
+        if (document.getElementById('task-lists-container')) loadTaskListsForSettings();
+        if (document.getElementById('tasks-container')) initTasksEngine();
+    } else {
+        console.warn("Authentication required: Skipping API-reliant engines.");
+        // Optional: Update UI to notify user
+        if (document.getElementById('task-lists-container')) {
+            document.getElementById('task-lists-container').innerHTML = "<p>Please sign in to access your data.</p>";
+        }
+    }
     
     // Page-specific engines that don't need APIs
     initMealPlannerEngine();
