@@ -39,45 +39,34 @@ function getValidAccessToken() {
 /* ==========================================
    2. GOOGLE API LOADING & CORE LIFECYCLE
    ========================================== */
-function gapiLoaded() {
+function initGoogleAuth() {
+    // Initialize GAPI client
     gapi.load('client', async () => {
-        await gapi.client.init({});
-        await gapi.client.load('calendar', 'v3');
-        await gapi.client.load('tasks', 'v1');
-        console.log("Google Libraries Loaded");
+        await gapi.client.init({
+            apiKey: '', // Add your API Key here
+            discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/tasks/v1/rest', 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'],
+            clientId: CLIENT_ID,
+            scope: SCOPES
+        });
         
-        // Grab token straight from cache if it exists to unlock instant load
+        // Now that the client is ready, attempt to auto-login or set up UI
         const activeToken = getValidAccessToken();
-        
         if (activeToken) {
             gapi.client.setToken({ access_token: activeToken });
-            if (document.getElementById('calendar-grid')) {
-                fetchWeatherData();
-            }
-            if (window.syncGoogleTasks) {
-                window.syncGoogleTasks();
-            }
-        } else if (localStorage.getItem('google_session_active') === 'true' && tokenClient) {
-            // UPDATED: 'none' forces the background silent refresh
-            console.log("Attempting silent token refresh...");
-            tokenClient.requestAccessToken({ prompt: 'none' }); 
-        } else {
-            // No credentials found; render a clean placeholder state
-            const grid = document.getElementById('calendar-grid');
-            if (grid) {
-                grid.innerHTML = '<div class="blank-state-card" style="grid-column: 1/-1; text-align: center; padding: 40px; color: #777;"><i class="fas fa-lock" style="font-size: 2.5rem; margin-bottom: 15px; color: #ccc;"></i><p>Sign in via Settings to view your Family Calendars.</p></div>';
+            updateSettingsUI(true);
+            // If on settings page, load lists
+            if (document.getElementById('task-lists-container')) {
+                loadTaskListsForSettings();
             }
         }
     });
-}
 
-function gisLoaded() {
+    // Initialize Identity Services (GIS)
     tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: CLIENT_ID,
         scope: SCOPES,
         callback: (tokenResponse) => {
-            if (tokenResponse.error !== undefined) throw (tokenResponse);
-            
+            // Your existing token handling logic here
             const expiryTime = Date.now() + (parseInt(tokenResponse.expires_in) * 1000);
             localStorage.setItem('google_access_token', tokenResponse.access_token);
             localStorage.setItem('google_token_expiry', expiryTime.toString());
@@ -85,21 +74,18 @@ function gisLoaded() {
             
             gapi.client.setToken({ access_token: tokenResponse.access_token });
             updateSettingsUI(true);
-
-            if (document.getElementById('calendar-grid')) {
-                fetchWeatherData();
-            }
-            if (window.syncGoogleTasks) {
-                window.syncGoogleTasks();
-            }
+            if (document.getElementById('task-lists-container')) loadTaskListsForSettings();
         },
     });
-
-    if (!getValidAccessToken() && localStorage.getItem('google_session_active') === 'true') {
-        console.log("Cached token missing/expired. Requesting background refresh...");
-        tokenClient.requestAccessToken({ prompt: '' });
-    }
 }
+
+// Ensure the lifecycle starts after the page is ready
+window.addEventListener('DOMContentLoaded', () => {
+    // Setup Sidebar
+    setupSidebarBehavior();
+    // Start Google Auth Engine
+    initGoogleAuth();
+});
 
 // Ensure trigger button elements exist before dynamically reading standard handlers
 function handleAuthClick() {
