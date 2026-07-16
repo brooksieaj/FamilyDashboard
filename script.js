@@ -3,6 +3,7 @@
    ========================================== */
 const CLIENT_ID = '145116633029-6ujgciuv8f3c9901c8uaorr6qopsaa4v.apps.googleusercontent.com';
 const SCOPES = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/tasks';
+const API_KEY = 'AIzaSyBgMck-FAK8w_oGrZhpfiOy17kHbmpkNJE'
 
 const FAMILY_CALENDARS = [
     { name: 'Dad', id: 'primary', color: '#4285f4' }, 
@@ -43,7 +44,7 @@ function initGoogleAuth() {
     // Initialize GAPI client
     gapi.load('client', async () => {
         await gapi.client.init({
-            apiKey: '', // Add your API Key here
+            apiKey: API_KEY, // 
             discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/tasks/v1/rest', 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'],
             clientId: CLIENT_ID,
             scope: SCOPES
