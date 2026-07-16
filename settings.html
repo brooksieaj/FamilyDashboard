@@ -47,6 +47,15 @@
                         <button id="auth_button" onclick="handleAuthClick()">Sign In with Google</button>
                         <button id="disconnect_button" class="disconnect-btn hidden" onclick="handleDisconnectClick()">Disconnect</button>
                     </div>
+
+                    <div class="settings-section">
+                        <h2>Task List Selection</h2>
+                        <p>Choose which Google Task lists to display on your Tasks page.</p>
+                        <div id="task-lists-container">
+                            <!-- Lists will be injected here via script.js -->
+                            <p>Please sign in to see your task lists.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
@@ -57,6 +66,6 @@
     <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
     <!-- Your Logic -->
     <script src="script.js"></script>
-    
+
 </body>
 </html>

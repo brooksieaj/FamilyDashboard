@@ -990,13 +990,60 @@ function initShoppingListEngine() {
 
 // Tasks
 
-function initTasksEngine() {
+async function initTasksEngine() {
     const tasksContainer = document.getElementById('tasks-container');
     if (!tasksContainer) return;
+
+    const selectedLists = JSON.parse(localStorage.getItem('selected_task_lists') || '[]');
     
-    // Add logic here to fetch and display tasks via gapi.client.tasks.tasklists.list
-    console.log("Tasks Engine Initialized");
+    // Fetch tasks for each selected list
+    for (const listId of selectedLists) {
+        const tasksRes = await gapi.client.tasks.tasks.list({ tasklist: listId });
+        renderTasks(tasksRes.result.items, listId);
+    }
 }
+
+// Example CRUD helper for adding a task
+async function addTask(listId, title) {
+    await gapi.client.tasks.tasks.insert({
+        tasklist: listId,
+        resource: { title: title, status: 'needsAction' }
+    });
+    initTasksEngine(); // Refresh view
+}
+
+async function loadTaskListsForSettings() {
+    const container = document.getElementById('task-lists-container');
+    if (!container) return;
+
+    try {
+        const response = await gapi.client.tasks.tasklists.list();
+        const lists = response.result.items || [];
+        const savedSelection = JSON.parse(localStorage.getItem('selected_task_lists') || '[]');
+
+        container.innerHTML = lists.map(list => `
+            <div>
+                <input type="checkbox" id="list-${list.id}" value="${list.id}" 
+                    ${savedSelection.includes(list.id) ? 'checked' : ''}
+                    onchange="toggleTaskList('${list.id}')">
+                <label for="list-${list.id}">${list.title}</label>
+            </div>
+        `).join('');
+    } catch (err) {
+        console.error("Error loading task lists:", err);
+    }
+}
+
+function toggleTaskList(listId) {
+    let selection = JSON.parse(localStorage.getItem('selected_task_lists') || '[]');
+    if (selection.includes(listId)) {
+        selection = selection.filter(id => id !== listId);
+    } else {
+        selection.push(listId);
+    }
+    localStorage.setItem('selected_task_lists', JSON.stringify(selection));
+}
+
 
 /* ==========================================
    11. LIFECYCLE HANDOFF ENGINE
