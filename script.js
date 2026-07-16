@@ -138,14 +138,24 @@ function updateSettingsUI(isConnected) {
     if (!statusBadge) return;
 
     if (isConnected) {
+        // UI State: Connected
         statusBadge.className = "status-badge connected";
         statusText.innerText = "Connected";
+        
+        // Show re-authenticate, hide initial Sign In if necessary
         authBtn.innerText = "Re-authenticate Account";
+        
+        // Ensure disconnect button is visible
         if (disconnectBtn) disconnectBtn.classList.remove('hidden');
     } else {
+        // UI State: Disconnected
         statusBadge.className = "status-badge disconnected";
         statusText.innerText = "Disconnected";
+        
+        // Reset to initial state
         authBtn.innerText = "Sign In with Google";
+        
+        // Hide disconnect button
         if (disconnectBtn) disconnectBtn.classList.add('hidden');
     }
 }
@@ -944,21 +954,3 @@ function masterOnloadPipeline() {
 
 window.onload = masterOnloadPipeline;
 
-function updateUI(isConnected) {
-    const badge = document.getElementById('auth-status-badge');
-    const statusText = document.getElementById('status-text');
-    const authBtn = document.getElementById('auth_button');
-    const disconnectBtn = document.getElementById('disconnect_button');
-
-    if (isConnected) {
-        badge.className = 'status-badge connected';
-        statusText.innerText = 'Connected';
-        authBtn.classList.add('hidden');
-        disconnectBtn.classList.remove('hidden');
-    } else {
-        badge.className = 'status-badge disconnected';
-        statusText.innerText = 'Disconnected';
-        authBtn.classList.remove('hidden');
-        disconnectBtn.classList.add('hidden');
-    }
-}
