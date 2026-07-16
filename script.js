@@ -23,6 +23,19 @@ let weatherForecast = null;
 let gapiReady = false;
 let gisReady = false;
 
+window.gapiLoaded = function() {
+    console.log("GAPI loaded");
+    gapiReady = true;
+    gapi.load('client', initializeGapiClient);
+};
+
+window.gisLoaded = function() {
+    console.log("GIS loaded");
+    gisReady = true;
+    // Call your initialization function here
+    initializeAppState(); 
+};
+
 // Secure token persistence getter
 function getValidAccessToken() {
     const token = localStorage.getItem('google_access_token');
