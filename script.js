@@ -279,17 +279,21 @@ function renderCalendarGrid(events) {
         });
 
         dayEvents.sort((a, b) => {
-            // 1. Check if they are all-day events (All-day events only have .date, not .dateTime)
-            const aIsAllDay = !a.start.dateTime;
-            const bIsAllDay = !b.start.dateTime;
+            // 1. Safety Guard: If either event is missing 'start', push it to the end
+            if (!a.start) return 1;
+            if (!b.start) return -1;
 
-            if (aIsAllDay && !bIsAllDay) return -1; // A comes first
-            if (!aIsAllDay && bIsAllDay) return 1;  // B comes first
+            // 2. Check if event is all-day
+            const aIsAllDay = !!a.start.date;
+            const bIsAllDay = !!b.start.date;
 
-            // 2. If both are timed, extract the start time strings
-            // We slice the ISO string to get 'HH:MM:SS'
-            const aTime = a.start.dateTime.substring(11, 19);
-            const bTime = b.start.dateTime.substring(11, 19);
+            if (aIsAllDay && !bIsAllDay) return -1;
+            if (!aIsAllDay && bIsAllDay) return 1;
+            if (aIsAllDay && bIsAllDay) return 0;
+
+            // 3. If both are timed, safely check for .dateTime before substring
+            const aTime = a.start.dateTime || "";
+            const bTime = b.start.dateTime || "";
 
             return aTime.localeCompare(bTime);
         });
