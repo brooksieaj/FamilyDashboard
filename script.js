@@ -1059,5 +1059,13 @@ function toggleTaskList(listId) {
     localStorage.setItem('selected_task_lists', JSON.stringify(selection));
 }
 
+window.addEventListener('load', () => {
+    console.log("DOM loaded, initializing Google libraries...");
+    
+    // Explicitly call the initialization functions
+    if (typeof gapiLoaded === 'function') gapiLoaded();
+    if (typeof gisLoaded === 'function') gisLoaded();
+});
+
 
 
