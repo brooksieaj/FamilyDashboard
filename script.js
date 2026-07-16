@@ -63,30 +63,29 @@ window.gisLoaded = function() {
 };
 
 async function initializeAppState() {
-    // 1. Guard Clause: If libraries aren't ready, don't run engines
+    // 1. Guard Clause: Only proceed if libraries are ready
     if (!gapiReady || !gisReady) return;
 
-    // 2. Prevent redundant execution
-    if (window.appInitialized) return;
-    window.appInitialized = true;
+    // 2. Check for existing session
+    const token = localStorage.getItem('google_access_token');
+    const isSessionActive = localStorage.getItem('google_session_active') === 'true';
 
-    console.log("Initializing App Engines...");
-
-    // 3. Authentication Check: Verify token exists
-    const token = gapi.client.getToken();
-    const isAuthenticated = token !== null && token.access_token !== undefined;
-
-    if (isAuthenticated) {
-        console.log("Authenticated: Starting API engines.");
+    if (token && isSessionActive) {
+        console.log("Restoring active session...");
+        gapi.client.setToken({ access_token: token });
+        
+        // Trigger all page-specific engines
         if (document.getElementById('calendar-grid')) fetchWeatherData();
         if (window.syncGoogleTasks) window.syncGoogleTasks();
-        if (document.getElementById('task-lists-container')) loadTaskListsForSettings();
-        if (document.getElementById('tasks-container')) initTasksEngine();
+        // ... add other engine calls here
     }
-    
-    // Page-specific engines that don't need APIs
+
+    // 3. Page-specific non-API engines
     initMealPlannerEngine();
     initShoppingListEngine();
+    initCountdown(); // Moved from runtimeInitEngine
+    
+    window.appInitialized = true;
 }
 
 function handleAuthClick() {
@@ -1059,13 +1058,19 @@ function toggleTaskList(listId) {
     localStorage.setItem('selected_task_lists', JSON.stringify(selection));
 }
 
-window.addEventListener('load', () => {
-    console.log("DOM loaded, initializing Google libraries...");
-    
-    // Explicitly call the initialization functions
-    if (typeof gapiLoaded === 'function') gapiLoaded();
-    if (typeof gisLoaded === 'function') gisLoaded();
-});
+function checkReadyAndInit() {
+    if (typeof gapi !== 'undefined' && typeof google !== 'undefined') {
+        // Trigger library loading if not already called
+        if (typeof gapiLoaded === 'function') gapiLoaded();
+        if (typeof gisLoaded === 'function') gisLoaded();
+    }
+}
 
+// Ensure init runs even if libraries load slowly
+window.addEventListener('load', checkReadyAndInit);
 
+// Also handle cases where scripts might be cached and load extremely fast
+if (document.readyState === 'complete') {
+    checkReadyAndInit();
+}
 
