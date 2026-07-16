@@ -174,7 +174,25 @@ function fetchWeatherData() {
 /* ==========================================
    4. DATA INGESTION (GOOGLE CALENDAR API)
    ========================================== */
-function fetchCalendarEvents() {
+async function fetchCalendarEvents() {
+    // 1. Define Cache keys and threshold (15 minutes in milliseconds)
+    const CACHE_KEY = 'calendar_cache';
+    const TIME_KEY = 'calendar_cache_time';
+    const CACHE_DURATION = 900000; 
+
+    // 2. Load from cache for instant rendering
+    const cachedData = localStorage.getItem(CACHE_KEY);
+    const lastFetch = localStorage.getItem(TIME_KEY);
+
+    if (cachedData && lastFetch && (Date.now() - parseInt(lastFetch) < CACHE_DURATION)) {
+        console.log("Loading events from cache...");
+        renderCalendarGrid(JSON.parse(cachedData));
+        // We return here to stop the API call from firing
+        return;
+    }
+
+    // 3. If no cache or cache expired, perform API fetch
+    console.log("Fetching fresh events from Google...");
     const startOfWeek = getMonday(new Date());
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 42); 
@@ -202,10 +220,14 @@ function fetchCalendarEvents() {
         });
     });
 
-    Promise.all(promises).then(results => {
-        const allEvents = results.flat();
-        renderCalendarGrid(allEvents);
-    });
+    const results = await Promise.all(promises);
+    const allEvents = results.flat();
+    
+    // 4. Update cache with fresh data
+    localStorage.setItem(CACHE_KEY, JSON.stringify(allEvents));
+    localStorage.setItem(TIME_KEY, Date.now().toString());
+    
+    renderCalendarGrid(allEvents);
 }
 
 /* ==========================================
