@@ -988,7 +988,14 @@ function initShoppingListEngine() {
     }
 }
 
-initTasksEngine() {
+// Tasks
+
+function initTasksEngine() {
+    const tasksContainer = document.getElementById('tasks-container');
+    if (!tasksContainer) return;
+    
+    // Add logic here to fetch and display tasks via gapi.client.tasks.tasklists.list
+    console.log("Tasks Engine Initialized");
 }
 
 /* ==========================================
