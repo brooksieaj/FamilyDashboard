@@ -48,19 +48,21 @@ function gapiLoaded() {
         
         // Grab token straight from cache if it exists to unlock instant load
         const activeToken = getValidAccessToken();
+        
         if (activeToken) {
             gapi.client.setToken({ access_token: activeToken });
             if (document.getElementById('calendar-grid')) {
-                fetchWeatherData(); // Triggers chain: weather -> fetch events -> render
+                fetchWeatherData();
             }
-            // Trigger shopping list sync immediately if on the shopping page
             if (window.syncGoogleTasks) {
                 window.syncGoogleTasks();
             }
         } else if (localStorage.getItem('google_session_active') === 'true' && tokenClient) {
-            tokenClient.requestAccessToken({ prompt: '' });
+            // UPDATED: 'none' forces the background silent refresh
+            console.log("Attempting silent token refresh...");
+            tokenClient.requestAccessToken({ prompt: 'none' }); 
         } else {
-            // No credentials found; render a clean placeholder state on the calendar grid
+            // No credentials found; render a clean placeholder state
             const grid = document.getElementById('calendar-grid');
             if (grid) {
                 grid.innerHTML = '<div class="blank-state-card" style="grid-column: 1/-1; text-align: center; padding: 40px; color: #777;"><i class="fas fa-lock" style="font-size: 2.5rem; margin-bottom: 15px; color: #ccc;"></i><p>Sign in via Settings to view your Family Calendars.</p></div>';
