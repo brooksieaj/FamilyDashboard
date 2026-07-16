@@ -1053,7 +1053,11 @@ function masterOnloadPipeline() {
     initMealPlannerEngine();
     initShoppingListEngine();
     
-    // Add conditional check for Tasks page
+    // Add these lines:
+    if (document.getElementById('task-lists-container')) {
+        loadTaskListsForSettings();
+    }
+
     if (document.getElementById('tasks-container')) {
         initTasksEngine();
     }
