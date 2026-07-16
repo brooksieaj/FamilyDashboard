@@ -1030,6 +1030,12 @@ async function loadTaskListsForSettings() {
     const container = document.getElementById('task-lists-container');
     if (!container) return;
 
+    // GUARD CLAUSE: Only proceed if the Tasks API client is fully loaded
+    if (!gapi.client || !gapi.client.tasks) {
+        console.warn("Tasks API not initialized yet.");
+        return;
+    }
+
     try {
         const response = await gapi.client.tasks.tasklists.list();
         const lists = response.result.items || [];
